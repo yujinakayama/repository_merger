@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bundler/setup'
+require_relative '../lib/rspec/repository_merger'
+require 'pry'
+
+def main
+  original_repo_paths = fetch_original_repos_if_needed
+  repo_merger = RSpec::RepositoryMerger.new(original_repo_paths)
+
+  repo = repo_merger.repos.find { |repo| repo.name == 'rspec-core' }
+  branch = repo.branches['origin/master']
+
+  branch.topologically_ordered_commits_from_root.first(50).each do |commit|
+    puts "#{commit.commit_time}, mainline: #{commit.mainline?}, #{commit.message.each_line.first}"
+  end
+
+  # binding.pry
+end
+
+def fetch_original_repos_if_needed
+  repo_urls = %w[
+    https://github.com/rspec/rspec.git
+    https://github.com/rspec/rspec-core.git
+    https://github.com/rspec/rspec-expectations.git
+    https://github.com/rspec/rspec-mocks.git
+    https://github.com/rspec/rspec-support.git
+  ]
+
+  original_repos_dir = 'original_repos'
+
+  Dir.mkdir(original_repos_dir) unless Dir.exist?(original_repos_dir)
+
+  repo_paths = Dir.chdir(original_repos_dir) do |current_directory|
+    repo_urls.map do |repo_url|
+      repo_name = File.basename(repo_url, '.git')
+
+      unless Dir.exist?(repo_name)
+        system("git clone #{repo_url}")
+      end
+
+      File.join(current_directory, repo_name)
+    end
+  end
+
+  repo_paths
+end
+
+main
