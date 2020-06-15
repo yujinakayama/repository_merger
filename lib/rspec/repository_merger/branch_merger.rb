@@ -1,23 +1,27 @@
 # frozen_string_literal: true
 
+require 'ruby-progressbar'
+
 module RSpec
   class RepositoryMerger
     class BranchMerger
-      attr_reader :repo_merger, :branch_name
+      attr_reader :repo_merger, :branch_name, :progressbar
 
       def initialize(repo_merger, branch_name:)
         @repo_merger = repo_merger
         @branch_name = branch_name
+        @progressbar = create_progressbar
       end
 
       def run
-        puts "Merging `#{branch_name}` branches from #{original_repos.map(&:name).join(', ')} into #{merged_repo.path}..."
+        progressbar.log "Merging `#{branch_name}` branches from #{original_repos.map(&:name).join(', ')} into #{merged_repo.path}..."
 
         while (original_commit = next_original_commit_to_process!)
-          puts "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
+          progressbar.increment
+          progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
 
           if commit_map.commit_id_in_merged_repo_for(original_commit)
-            puts "    Already imported. Skipping."
+            progressbar.log "    Already imported. Skipping."
           else
             import_commit_into_merged_repo(original_commit)
           end
@@ -84,6 +88,17 @@ module RSpec
 
       def commit_map
         repo_merger.commit_map
+      end
+
+      def create_progressbar
+        # 185/407 commits |====== 45 ======>                    |  ETA: 00:00:04
+        # %c / %C         |       %w       >         %i         |       %e
+        bar_format = " %c/%C commits |%w>%i| %e "
+
+        ProgressBar.create(
+          format: bar_format,
+          total: unprocessed_original_commit_queues.sum { |queue| queue.size }
+        )
       end
     end
   end

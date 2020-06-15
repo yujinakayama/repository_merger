@@ -2,6 +2,7 @@
 source 'https://rubygems.org'
 
 gem 'rugged'
+gem 'ruby-progressbar'
 gem 'pry-byebug'
 
 group :test do
