@@ -53,6 +53,7 @@ module RSpec
           original_commit,
           new_parent_ids: parent_commit_ids_in_merged_repo,
           subdirectory: original_commit.repo.name,
+          message: commit_message_from(original_commit),
           branch_name: original_commit.mainline? ? branch_name : nil
         )
 
@@ -66,6 +67,14 @@ module RSpec
         branch = merged_repo.branches[branch_name]
         return nil unless branch
         branch.target_commit.id
+      end
+
+      def commit_message_from(original_commit)
+        if commit_message_transformer
+          commit_message_transformer.call(original_commit)
+        else
+          original_commit.message
+        end
       end
 
       def unprocessed_original_commit_queues
@@ -88,6 +97,10 @@ module RSpec
 
       def commit_map
         repo_merger.commit_map
+      end
+
+      def commit_message_transformer
+        repo_merger.commit_message_transformer
       end
 
       def create_progressbar

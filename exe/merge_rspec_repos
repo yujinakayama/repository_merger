@@ -13,7 +13,14 @@ def main
 
   original_repo_paths = fetch_original_repos_if_needed
   merged_repo_path = create_merged_repo_if_needed
+
   repo_merger = RSpec::RepositoryMerger.new(original_repo_paths, merged_repo_path: merged_repo_path)
+
+  repo_merger.commit_message_transformer = proc do |original_commit|
+    scope = "[#{original_commit.repo.name.sub(/\Arspec-/, '')}]"
+    "#{scope} #{original_commit.message}"
+  end
+
   repo_merger.merge_branches('master')
 end
 
