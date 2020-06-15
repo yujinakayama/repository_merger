@@ -7,7 +7,13 @@ require 'rugged'
 
 module RSpec
   class RepositoryMerger
-    Repository = Struct.new(:path) do
+    class Repository
+      attr_reader :path
+
+      def initialize(path)
+        @path = File.expand_path(path)
+      end
+
       def rugged_repo
         @rugged_repo ||= Rugged::Repository.new(path)
       end
