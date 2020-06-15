@@ -30,7 +30,7 @@ class RepositoryMerger
       new_commit_id = Rugged::Commit.create(rugged_repo, {
         message: message || original_rugged_commit.message,
         committer: original_rugged_commit.committer,
-        author: original_rugged_commit.committer,
+        author: original_rugged_commit.author,
         tree: rugged_repo.index.write_tree,
         update_ref: branch_exists ? "refs/heads/#{branch_name}" : nil,
         parents: new_parent_ids,
