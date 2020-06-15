@@ -18,7 +18,13 @@ def main
 
   repo_merger.commit_message_transformer = proc do |original_commit|
     scope = "[#{original_commit.repo.name.sub(/\Arspec-/, '')}]"
-    "#{scope} #{original_commit.message}"
+
+    message = original_commit.message.gsub(/#(?<issue_number>\d+)/) do
+      issue_number = Regexp.last_match[:issue_number]
+      "https://github.com/rspec/#{original_commit.repo.name}/issues/#{issue_number}"
+    end
+
+    "#{scope} #{message}"
   end
 
   repo_merger.merge_branches('master')
