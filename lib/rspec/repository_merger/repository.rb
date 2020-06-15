@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'branch'
+require_relative 'commit'
 
 require 'rugged'
 
@@ -21,6 +22,11 @@ module RSpec
         end
 
         branches.map { |branch| [branch.name, branch] }.to_h
+      end
+
+      def lookup(commit_id)
+        rugged_commit = rugged_repo.lookup(commit_id)
+        Commit.new(rugged_commit, self)
       end
     end
   end
