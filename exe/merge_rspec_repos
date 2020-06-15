@@ -22,6 +22,12 @@ def main
   end
 
   repo_merger.merge_branches('master')
+
+  # Merged repos without GC tend to have large volume
+  Dir.chdir(merged_repo_path) do
+    puts 'Running `git gc`...'
+    system('git gc')
+  end
 end
 
 def fetch_original_repos_if_needed
