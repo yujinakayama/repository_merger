@@ -29,7 +29,7 @@ class RepositoryMerger
 
     def next_original_commit_to_process!
       queue_having_oldest_next_commit =
-        unprocessed_original_commit_queues.sort_by { |queue |queue.first.commit_time }.first
+        unprocessed_original_commit_queues.reject(&:empty?).min_by { |queue| queue.first.commit_time }
 
       queue_having_oldest_next_commit&.shift
     end
