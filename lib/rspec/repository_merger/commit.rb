@@ -25,6 +25,10 @@ module RSpec
         rugged_commit.committer[:time]
       end
 
+      def root?
+        parents.empty?
+      end
+
       def merge_commit?
         parents.size > 1
       end
@@ -33,6 +37,10 @@ module RSpec
         @parents ||= rugged_commit.parents.map do |parent_rugged_commit|
           create_parent(parent_rugged_commit)
         end
+      end
+
+      def checkout_contents_into(directory_path)
+        repo.rugged_repo.checkout_tree(id, strategy: :force, target_directory: directory_path)
       end
 
       private
