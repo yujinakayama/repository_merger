@@ -2,7 +2,7 @@
 source 'https://rubygems.org'
 
 gem 'rugged'
-gem 'pry'
+gem 'pry-byebug'
 
 group :test do
   gem 'rspec'

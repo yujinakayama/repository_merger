@@ -7,16 +7,9 @@ require 'pry'
 
 def main
   original_repo_paths = fetch_original_repos_if_needed
-  repo_merger = RSpec::RepositoryMerger.new(original_repo_paths)
-
-  repo = repo_merger.repos.find { |repo| repo.name == 'rspec-core' }
-  branch = repo.branches['origin/master']
-
-  branch.topologically_ordered_commits_from_root.first(50).each do |commit|
-    puts "#{commit.commit_time}, mainline: #{commit.mainline?}, #{commit.message.each_line.first}"
-  end
-
-  # binding.pry
+  merged_repo_path = create_merged_repo_if_needed
+  repo_merger = RSpec::RepositoryMerger.new(original_repo_paths, merged_repo_path: merged_repo_path)
+  repo_merger.merge_branches('master')
 end
 
 def fetch_original_repos_if_needed
@@ -45,6 +38,19 @@ def fetch_original_repos_if_needed
   end
 
   repo_paths
+end
+
+def create_merged_repo_if_needed
+  merged_repo_dir = 'merged_repo'
+
+  unless Dir.exist?(merged_repo_dir)
+    Dir.mkdir(merged_repo_dir)
+    Dir.chdir(merged_repo_dir) do
+      system('git init')
+    end
+  end
+
+  merged_repo_dir
 end
 
 main
