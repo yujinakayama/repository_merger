@@ -10,6 +10,7 @@ module RSpec
     COMMIT_MAP_PATH = 'commit_map.json'
 
     attr_reader :original_repo_paths, :merged_repo_path
+    attr_accessor :commit_message_transformer
 
     def initialize(original_repo_paths, merged_repo_path:)
       @original_repo_paths = original_repo_paths
