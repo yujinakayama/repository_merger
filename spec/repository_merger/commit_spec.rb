@@ -1,6 +1,6 @@
-require 'rspec/repository_merger/commit'
+require 'repository_merger/commit'
 
-class RSpec::RepositoryMerger
+class RepositoryMerger
   RSpec.describe Commit do
     let(:repo) do
       FixtureHelper.rspec_core_repo

@@ -3,7 +3,7 @@ module FixtureHelper
 
   def rspec_core_repo
     clone_rspec_core_if_needed
-    RSpec::RepositoryMerger::Repository.new(rspec_core_repo_path)
+    RepositoryMerger::Repository.new(rspec_core_repo_path)
   end
 
   def clone_rspec_core_if_needed

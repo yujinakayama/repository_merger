@@ -1,6 +1,6 @@
-require 'rspec/repository_merger/branch_commit'
+require 'repository_merger/branch_commit'
 
-class RSpec::RepositoryMerger
+class RepositoryMerger
   RSpec.describe BranchCommit do
     let(:branch_commits) do
       repo.branches['origin/master'].topologically_ordered_commits_from_root
