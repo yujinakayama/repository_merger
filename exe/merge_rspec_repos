@@ -23,8 +23,11 @@ def main
 
   repo_merger.merge_branches('master')
 
-  # Merged repos without GC tend to have large volume
   Dir.chdir(merged_repo_path) do
+    # Clear index and working tree since they're cluttered after the merge
+    `git reset --hard`
+
+    # Merged repos without GC tend to have large volume
     puts 'Running `git gc`...'
     system('git gc')
   end
