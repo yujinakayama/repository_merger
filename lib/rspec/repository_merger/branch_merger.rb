@@ -14,7 +14,7 @@ module RSpec
         puts "Merging `#{branch_name}` branches from #{original_repos.map(&:name).join(', ')} into #{merged_repo.path}..."
 
         while (original_commit = next_original_commit_to_process!)
-          puts "  [#{original_commit.repo.name}] #{original_commit.commit_time} #{original_commit.message.inspect}"
+          puts "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
           import_commit_into_merged_repo(original_commit)
         end
       end
