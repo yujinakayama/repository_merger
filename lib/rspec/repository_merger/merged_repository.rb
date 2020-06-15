@@ -5,9 +5,15 @@ require 'rugged'
 module RSpec
   class RepositoryMerger
     class MergedRepository < Repository
-      def import_commit(original_commit, new_parent_ids:, subdirectory:, branch_name: nil)
+      def import_commit(original_commit, new_parent_ids:, subdirectory:, message: nil, branch_name: nil)
         stage_contents_of(original_commit, subdirectory: subdirectory)
-        create_commit_with_metadata_of(original_commit, new_parent_ids: new_parent_ids, branch_name: branch_name)
+
+        create_commit_with_metadata_of(
+          original_commit,
+          new_parent_ids: new_parent_ids,
+          message: message,
+          branch_name: branch_name
+        )
       end
 
       private
@@ -17,13 +23,13 @@ module RSpec
         rugged_repo.index.add_all
       end
 
-      def create_commit_with_metadata_of(original_commit, new_parent_ids:, branch_name:)
+      def create_commit_with_metadata_of(original_commit, new_parent_ids:, message:, branch_name:)
         original_rugged_commit = original_commit.rugged_commit
 
         branch_exists = branches[branch_name]
 
         new_commit_id = Rugged::Commit.create(rugged_repo, {
-          message: original_rugged_commit.message,
+          message: message || original_rugged_commit.message,
           committer: original_rugged_commit.committer,
           author: original_rugged_commit.committer,
           tree: rugged_repo.index.write_tree,
