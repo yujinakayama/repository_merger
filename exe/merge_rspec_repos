@@ -6,6 +6,11 @@ require_relative '../lib/rspec/repository_merger'
 require 'pry'
 
 def main
+  Signal.trap('INT') do
+    puts 'Aborting...'
+    exit(1)
+  end
+
   original_repo_paths = fetch_original_repos_if_needed
   merged_repo_path = create_merged_repo_if_needed
   repo_merger = RSpec::RepositoryMerger.new(original_repo_paths, merged_repo_path: merged_repo_path)

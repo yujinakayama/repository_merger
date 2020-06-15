@@ -7,6 +7,8 @@ require_relative 'repository_merger/repository'
 
 module RSpec
   class RepositoryMerger
+    COMMIT_MAP_PATH = 'commit_map.json'
+
     attr_reader :original_repo_paths, :merged_repo_path
 
     def initialize(original_repo_paths, merged_repo_path:)
@@ -28,7 +30,21 @@ module RSpec
     end
 
     def commit_map
-      @commit_map ||= CommitMap.new
+      @commit_map ||= begin
+        commit_map =
+          if File.exist?(COMMIT_MAP_PATH)
+            CommitMap.load_from(COMMIT_MAP_PATH)
+          else
+            CommitMap.new
+          end
+
+        at_exit do
+          commit_map.save_to(COMMIT_MAP_PATH)
+          puts "Saved commit map to #{COMMIT_MAP_PATH}."
+        end
+
+        commit_map
+      end
     end
   end
 end
