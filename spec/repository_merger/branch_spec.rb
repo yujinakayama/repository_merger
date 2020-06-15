@@ -1,6 +1,6 @@
-require 'rspec/repository_merger/repository'
+require 'repository_merger/repository'
 
-class RSpec::RepositoryMerger
+class RepositoryMerger
   RSpec.describe Branch do
     let(:repo) do
       FixtureHelper.rspec_core_repo

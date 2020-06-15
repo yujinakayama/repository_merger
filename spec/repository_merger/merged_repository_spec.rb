@@ -1,14 +1,14 @@
-require 'rspec/repository_merger/merged_repository'
+require 'repository_merger/merged_repository'
 require 'fileutils'
 
-class RSpec::RepositoryMerger
+class RepositoryMerger
   RSpec.describe MergedRepository do
     include GitHelper
 
     subject(:merged_repo) do
       path = 'tmp/merged_repo'
       git_init(path)
-      RSpec::RepositoryMerger::MergedRepository.new(path)
+      MergedRepository.new(path)
     end
 
     describe '#import_commit' do
@@ -118,7 +118,7 @@ class RSpec::RepositoryMerger
             `git commit --message='Remove some_file.txt'`
           end
 
-          RSpec::RepositoryMerger::Repository.new(path)
+          Repository.new(path)
         end
 
         let(:original_commits) do
