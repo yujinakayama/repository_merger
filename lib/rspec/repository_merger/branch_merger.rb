@@ -15,7 +15,12 @@ module RSpec
 
         while (original_commit = next_original_commit_to_process!)
           puts "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
-          import_commit_into_merged_repo(original_commit)
+
+          if commit_map.commit_id_in_merged_repo_for(original_commit)
+            puts "    Already imported. Skipping."
+          else
+            import_commit_into_merged_repo(original_commit)
+          end
         end
       end
 
