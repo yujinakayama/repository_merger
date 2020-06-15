@@ -94,3 +94,5 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 end
+
+Dir.glob('./spec/support/**/*.rb') { |file| require file }
