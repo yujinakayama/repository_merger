@@ -16,7 +16,6 @@ class RepositoryMerger
       progressbar.log "Merging `#{branch_name}` branches from #{original_repos.map(&:name).join(', ')} into #{merged_repo.path}..."
 
       while (original_commit = next_original_commit_to_process!)
-        progressbar.increment
         progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
 
         if commit_map.commit_id_in_merged_repo_for(original_commit)
@@ -24,6 +23,8 @@ class RepositoryMerger
         else
           import_commit_into_merged_repo(original_commit)
         end
+
+        progressbar.increment
       end
     end
 
