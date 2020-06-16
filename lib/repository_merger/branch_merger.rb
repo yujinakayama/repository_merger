@@ -84,7 +84,7 @@ class RepositoryMerger
     end
 
     def original_branches
-      original_repos.map { |repo| repo.branches[branch_name] }
+      original_repos.map { |repo| repo.branches[branch_name] }.compact
     end
 
     def original_repos
@@ -106,10 +106,11 @@ class RepositoryMerger
     def create_progressbar
       # 185/407 commits |====== 45 ======>                    |  ETA: 00:00:04
       # %c / %C         |       %w       >         %i         |       %e
-      bar_format = " %c/%C commits |%w>%i| %e "
+      bar_format = " %t: %c/%C commits |%w>%i| %e "
 
       ProgressBar.create(
         format: bar_format,
+        title: branch_name,
         total: unprocessed_original_commit_queues.sum { |queue| queue.size }
       )
     end
