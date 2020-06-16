@@ -14,7 +14,7 @@ class RepositoryMerger
     end
 
     def run
-      progressbar.log "Merging `#{branch_name}` branches from #{original_repos.map(&:name).join(', ')} into #{merged_repo.path}..."
+      progressbar.log "Merging `#{branch_name}` branches of #{original_repos.map(&:name).join(', ')} into `#{branch_name_in_merged_repo}` branch of #{merged_repo.path}..."
 
       while (original_commit = next_original_commit_to_process!)
         process_commit(original_commit)
@@ -59,7 +59,7 @@ class RepositoryMerger
         new_parent_ids: parent_commit_ids_in_merged_repo,
         subdirectory: original_commit.repo.name,
         message: commit_message_from(original_commit),
-        branch_name: original_commit.mainline? ? branch_name : nil
+        branch_name: original_commit.mainline? ? branch_name_in_merged_repo : nil
       )
 
       commit_map.register(
@@ -69,7 +69,7 @@ class RepositoryMerger
     end
 
     def current_branch_head_id_in_merged_repo
-      branch = merged_repo.branches[branch_name]
+      branch = merged_repo.branches[branch_name_in_merged_repo]
       return nil unless branch
       branch.target_commit.id
     end
@@ -80,6 +80,10 @@ class RepositoryMerger
       else
         original_commit.message
       end
+    end
+
+    def branch_name_in_merged_repo
+      @branch_name_in_merged_repo ||= original_branches.first.local_name
     end
 
     def unprocessed_original_commit_queues

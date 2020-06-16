@@ -6,24 +6,24 @@ class RepositoryMerger
       FixtureHelper.rspec_core_repo
     end
 
-    describe '#remote?' do
+    describe '#local_name' do
       context 'with a local branch' do
         let(:branch) do
           repo.branches['master']
         end
 
-        it 'returns false' do
-          expect(branch.remote?).to be false
+        it 'returns the name' do
+          expect(branch.local_name).to eq('master')
         end
       end
 
-      context 'with a remote branch' do
+      context 'with a remote-tracking branch' do
         let(:branch) do
           repo.branches['origin/master']
         end
 
-        it 'returns true' do
-          expect(branch.remote?).to be true
+        it 'returns a name for suitable for local branch' do
+          expect(branch.local_name).to eq('master')
         end
       end
     end
