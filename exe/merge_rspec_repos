@@ -21,7 +21,12 @@ def main
     "#{scope} #{original_commit.message}"
   end
 
-  repo_merger.merge_branches('master')
+  all_branch_names = repo_merger.original_repos.flat_map { |repo| repo.branches.keys }.uniq.sort
+  target_branch_names = ['origin/master'] + all_branch_names.grep(/\Aorigin\/\d+-\d+-(maintenance|stable)\z/)
+
+  target_branch_names.each do |branch_name|
+    repo_merger.merge_branches(branch_name)
+  end
 
   Dir.chdir(merged_repo_path) do
     # Clear index and working tree since they're cluttered after the merge
