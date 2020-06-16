@@ -10,15 +10,14 @@ class RepositoryMerger
   COMMIT_MAP_PATH = 'commit_map.json'
 
   attr_reader :original_repo_paths, :merged_repo_path
-  attr_accessor :commit_message_transformer
 
   def initialize(original_repo_paths, merged_repo_path:)
     @original_repo_paths = original_repo_paths
     @merged_repo_path = merged_repo_path
   end
 
-  def merge_branches(branch_name)
-    branch_merger = BranchMerger.new(self, branch_name: branch_name)
+  def merge_branches(branch_name, commit_message_transformer: nil)
+    branch_merger = BranchMerger.new(self, branch_name: branch_name, commit_message_transformer: commit_message_transformer)
     branch_merger.run
   end
 
