@@ -11,8 +11,12 @@ class RepositoryMerger
       rugged_branch.name
     end
 
-    def remote?
-      rugged_branch.upstream.nil?
+    def local_name
+      if rugged_branch.remote_name
+        name.delete_prefix("#{rugged_branch.remote_name}/")
+      else
+        name
+      end
     end
 
     def target_commit
