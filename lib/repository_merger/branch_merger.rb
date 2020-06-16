@@ -4,11 +4,12 @@ require 'ruby-progressbar'
 
 class RepositoryMerger
   class BranchMerger
-    attr_reader :repo_merger, :branch_name, :progressbar
+    attr_reader :repo_merger, :branch_name, :commit_message_transformer, :progressbar
 
-    def initialize(repo_merger, branch_name:)
+    def initialize(repo_merger, branch_name:, commit_message_transformer: nil)
       @repo_merger = repo_merger
       @branch_name = branch_name
+      @commit_message_transformer = commit_message_transformer
       @progressbar = create_progressbar
     end
 
@@ -101,10 +102,6 @@ class RepositoryMerger
 
     def commit_map
       repo_merger.commit_map
-    end
-
-    def commit_message_transformer
-      repo_merger.commit_message_transformer
     end
 
     def create_progressbar
