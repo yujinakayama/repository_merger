@@ -2,6 +2,7 @@
 
 require_relative 'branch'
 require_relative 'commit'
+require_relative 'tag'
 
 require 'rugged'
 
@@ -27,6 +28,14 @@ class RepositoryMerger
       end
 
       branches.map { |branch| [branch.name, branch] }.to_h
+    end
+
+    def tags
+      tags = rugged_repo.tags.map do |rugged_tag|
+        Tag.new(rugged_tag, self)
+      end
+
+      tags.map { |tag| [tag.name, tag] }.to_h
     end
 
     def lookup(commit_id)

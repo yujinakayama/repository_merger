@@ -4,6 +4,7 @@ require_relative 'repository_merger/branch_merger'
 require_relative 'repository_merger/commit_map'
 require_relative 'repository_merger/merged_repository'
 require_relative 'repository_merger/repository'
+require_relative 'repository_merger/tag_importer'
 
 class RepositoryMerger
   COMMIT_MAP_PATH = 'commit_map.json'
@@ -19,6 +20,11 @@ class RepositoryMerger
   def merge_branches(branch_name)
     branch_merger = BranchMerger.new(self, branch_name: branch_name)
     branch_merger.run
+  end
+
+  def import_tags(tag_name_transformer:)
+    tag_importer = TagImporter.new(self, tag_name_transformer)
+    tag_importer.run
   end
 
   def original_repos

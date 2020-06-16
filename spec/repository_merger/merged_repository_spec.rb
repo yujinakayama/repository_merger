@@ -11,11 +11,11 @@ class RepositoryMerger
       MergedRepository.new(path)
     end
 
-    describe '#import_commit' do
-      let(:original_repo) do
-        FixtureHelper.rspec_core_repo
-      end
+    let(:original_repo) do
+      FixtureHelper.rspec_core_repo
+    end
 
+    describe '#import_commit' do
       let(:original_commits) do
         original_repo.branches['origin/master'].topologically_ordered_commits_from_root
       end
@@ -156,6 +156,127 @@ class RepositoryMerger
             +++ /dev/null
             @@ -1 +0,0 @@
             -foo
+          END
+        end
+      end
+    end
+
+    describe '#import_tag' do
+      context 'with a lightweight annotated tag' do
+        let(:original_tag) do
+          original_repo.tags['v2.0.0.beta.1']
+        end
+
+        let(:original_commit) do
+          original_repo.branches['origin/master'].topologically_ordered_commits_from_root.find do |commit|
+            commit.id == 'dd11a4714dc51d78a8ba5fec42adaffc6c92ea39'
+          end
+        end
+
+        let(:new_commit_in_merged_repo) do
+          new_parent_commit = merged_repo.import_commit(
+            original_commit.parents.first,
+            new_parent_ids: [],
+            branch_name: 'master',
+            subdirectory: 'rspec-core'
+          )
+
+          merged_repo.import_commit(
+            original_commit,
+            new_parent_ids: [new_parent_commit.id],
+            branch_name: 'master',
+            subdirectory: 'rspec-core'
+          )
+        end
+
+        it 'creates a new tag' do
+          new_tag = merged_repo.import_tag(
+            original_tag,
+            new_commit_id: new_commit_in_merged_repo.id,
+            new_tag_name: 'v2.0.0.beta.1'
+          )
+
+          expect(git_show(new_tag).sub(/^commit \h+/, 'commit ?'))
+            .to eq(git_show(original_tag).sub(/^commit \h+/, 'commit ?').sub('tag v2.0.0.beta.1', 'tag rspec-core-v2.0.0.beta.1').gsub('PATH:', 'PATH:rspec-core/'))
+
+          expect(git_show(new_tag)).to start_with(<<~END)
+            commit 553ffa5b2fdf596956e69871848675a69b6f06d0
+            Author:     David Chelimsky <dchelimsky@gmail.com>
+            AuthorDate: Mon Mar 1 23:03:27 2010 -0600
+            Commit:     David Chelimsky <dchelimsky@gmail.com>
+            CommitDate: Mon Mar 1 23:03:27 2010 -0600
+
+                rename method and avoid collision with 'assignments'
+
+          END
+        end
+      end
+
+      context 'with an annotated tag' do
+        let(:original_tag) do
+          original_repo.tags['v3.0.0']
+        end
+
+        let(:original_commit) do
+          original_repo.branches['origin/master'].topologically_ordered_commits_from_root.find do |commit|
+            commit.id == '91f428f609b37422c08306517e09d2466ab8e516'
+          end
+        end
+
+        let(:new_commit_in_merged_repo) do
+          new_parent_commit = merged_repo.import_commit(
+            original_commit.parents.first,
+            new_parent_ids: [],
+            branch_name: 'master',
+            subdirectory: 'rspec-core'
+          )
+
+          merged_repo.import_commit(
+            original_commit,
+            new_parent_ids: [new_parent_commit.id],
+            branch_name: 'master',
+            subdirectory: 'rspec-core'
+          )
+        end
+
+        it 'creates a new tag with the annotation' do
+          new_tag = merged_repo.import_tag(
+            original_tag,
+            new_commit_id: new_commit_in_merged_repo.id,
+            new_tag_name: 'rspec-core-v3.0.0'
+          )
+
+          expect(git_show(new_tag).sub(/^commit \h+/, 'commit ?'))
+            .to eq(git_show(original_tag).sub(/^commit \h+/, 'commit ?').sub('tag v3.0.0', 'tag rspec-core-v3.0.0').gsub('PATH:', 'PATH:rspec-core/'))
+
+          expect(git_show(new_tag)).to eq(<<~END)
+            tag rspec-core-v3.0.0
+            Tagger:     Myron Marston <myron.marston@gmail.com>
+            TaggerDate: Sun Jun 1 20:32:31 2014 -0700
+
+            Version 3.0.0
+
+            commit #{new_tag.target_commit.id}
+            Author:     Myron Marston <myron.marston@gmail.com>
+            AuthorDate: Sun Jun 1 20:27:10 2014 -0700
+            Commit:     Myron Marston <myron.marston@gmail.com>
+            CommitDate: Sun Jun 1 20:27:10 2014 -0700
+
+                Release 3.0.0
+
+            diff --git PATH:rspec-core/lib/rspec/core/version.rb PATH:rspec-core/lib/rspec/core/version.rb
+            index 1e2105bc3cf83aa00c2d4747e0a6e986797887cb..b565629bca6d7698ae8e6e277cf77eaab6407df2 100644
+            --- PATH:rspec-core/lib/rspec/core/version.rb
+            +++ PATH:rspec-core/lib/rspec/core/version.rb
+            @@ -3,7 +3,7 @@ module RSpec
+                 # Version information for RSpec Core.
+                 module Version
+                   # Current version of RSpec Core, in semantic versioning format.
+            -      STRING = '3.0.0.rc1'
+            +      STRING = '3.0.0'
+                 end
+               end
+             end
           END
         end
       end
