@@ -15,6 +15,11 @@ class RepositoryMerger
       )
     end
 
+    def import_tag(original_tag, new_commit_id:, new_tag_name:)
+      rugged_repo.tags.create(new_tag_name, new_commit_id, original_tag.annotation)
+      tags[new_tag_name]
+    end
+
     private
 
     def stage_contents_of(original_commit, subdirectory:)

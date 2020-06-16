@@ -28,6 +28,12 @@ def main
     repo_merger.merge_branches(branch_name)
   end
 
+  repo_merger.import_tags(
+    tag_name_transformer: proc do |original_tag|
+      "#{original_tag.repo.name}-#{original_tag.name}"
+    end
+  )
+
   Dir.chdir(merged_repo_path) do
     # Clear index and working tree since they're cluttered after the merge
     `git reset --hard`
