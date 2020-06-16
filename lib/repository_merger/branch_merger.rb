@@ -16,15 +16,7 @@ class RepositoryMerger
       progressbar.log "Merging `#{branch_name}` branches from #{original_repos.map(&:name).join(', ')} into #{merged_repo.path}..."
 
       while (original_commit = next_original_commit_to_process!)
-        progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
-
-        if commit_map.commit_id_in_merged_repo_for(original_commit)
-          progressbar.log "    Already imported. Skipping."
-        else
-          import_commit_into_merged_repo(original_commit)
-        end
-
-        progressbar.increment
+        process_commit(original_commit)
       end
     end
 
@@ -33,6 +25,18 @@ class RepositoryMerger
         unprocessed_original_commit_queues.reject(&:empty?).min_by { |queue| queue.first.commit_time }
 
       queue_having_oldest_next_commit&.shift
+    end
+
+    def process_commit(original_commit)
+      progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
+
+      if commit_map.commit_id_in_merged_repo_for(original_commit)
+        progressbar.log "    Already imported. Skipping."
+      else
+        import_commit_into_merged_repo(original_commit)
+      end
+
+      progressbar.increment
     end
 
     def import_commit_into_merged_repo(original_commit)
