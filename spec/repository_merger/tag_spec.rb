@@ -9,7 +9,7 @@ class RepositoryMerger
     describe '#target_commit' do
       context 'with a lightweight tag' do
         let(:tag) do
-          repo.tags['v2.0.0.beta.1']
+          repo.tag('v2.0.0.beta.1')
         end
 
         it 'returns the target commit properly' do
@@ -23,7 +23,7 @@ class RepositoryMerger
 
       context 'with an annotated tag' do
         let(:tag) do
-          repo.tags['v3.0.0']
+          repo.tag('v3.0.0')
         end
 
         it 'returns the target commit properly' do

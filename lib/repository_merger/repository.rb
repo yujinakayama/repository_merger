@@ -22,20 +22,28 @@ class RepositoryMerger
       File.basename(path)
     end
 
+    def branch(name)
+      rugged_branch = rugged_repo.branches[name]
+      return nil unless rugged_branch
+      Branch.new(rugged_branch, self)
+    end
+
     def branches
-      branches = rugged_repo.branches.map do |rugged_branch|
+      rugged_repo.branches.map do |rugged_branch|
         Branch.new(rugged_branch, self)
       end
+    end
 
-      branches.map { |branch| [branch.name, branch] }.to_h
+    def tag(name)
+      rugged_tag = rugged_repo.tags[name]
+      return nil unless rugged_tag
+      Tag.new(rugged_tag, self)
     end
 
     def tags
-      tags = rugged_repo.tags.map do |rugged_tag|
+      rugged_repo.tags.map do |rugged_tag|
         Tag.new(rugged_tag, self)
       end
-
-      tags.map { |tag| [tag.name, tag] }.to_h
     end
 
     def lookup(commit_id)

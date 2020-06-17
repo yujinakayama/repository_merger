@@ -26,7 +26,7 @@ class RepositoryMerger
         rugged_repo.tags.create(new_tag_name, new_commit_id)
       end
 
-      tags[new_tag_name]
+      tag(new_tag_name)
     end
 
     def create_or_update_branch(branch_name, commit_id:)
@@ -43,18 +43,16 @@ class RepositoryMerger
     def create_commit_with_metadata_of(original_commit, new_parent_ids:, message:, branch_name:)
       original_rugged_commit = original_commit.rugged_commit
 
-      branch_exists = branches[branch_name]
-
       new_commit_id = Rugged::Commit.create(rugged_repo, {
         message: message || original_rugged_commit.message,
         committer: original_rugged_commit.committer,
         author: original_rugged_commit.author,
         tree: rugged_repo.index.write_tree,
-        update_ref: branch_exists ? "refs/heads/#{branch_name}" : nil,
+        update_ref: branch_name && branch(branch_name) ? "refs/heads/#{branch_name}" : nil,
         parents: new_parent_ids,
       })
 
-      if branch_name && !branch_exists
+      if branch_name && branch(branch_name).nil?
         create_or_update_branch(branch_name, commit_id: new_commit_id)
       end
 

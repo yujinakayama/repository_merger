@@ -7,11 +7,8 @@ class RepositoryMerger
     end
 
     describe '#branches' do
-      it 'returns branches keyed by name' do
-        expect(repo.branches).to include(
-          'master'        => an_object_having_attributes(name: 'master'),
-          'origin/master' => an_object_having_attributes(name: 'origin/master'),
-        )
+      it 'returns branches' do
+        expect(repo.branches.map(&:name)).to include('master', 'origin/master')
       end
     end
   end

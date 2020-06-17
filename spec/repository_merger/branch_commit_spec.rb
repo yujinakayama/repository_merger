@@ -3,7 +3,7 @@ require 'repository_merger/branch_commit'
 class RepositoryMerger
   RSpec.describe BranchCommit do
     let(:branch_commits) do
-      repo.branches['origin/master'].topologically_ordered_commits_from_root
+      repo.branch('origin/master').topologically_ordered_commits_from_root
     end
 
     let(:repo) do

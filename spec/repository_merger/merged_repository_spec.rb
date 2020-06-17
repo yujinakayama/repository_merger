@@ -16,7 +16,7 @@ class RepositoryMerger
 
     describe '#import_commit' do
       let(:original_commits) do
-        original_repo.branches['origin/master'].topologically_ordered_commits_from_root
+        original_repo.branch('origin/master').topologically_ordered_commits_from_root
       end
 
       it 'creates a new commit with contents of the original commit under the given subdirectory on the branch' do
@@ -119,7 +119,7 @@ class RepositoryMerger
         end
 
         let(:original_commits) do
-          original_repo.branches['master'].topologically_ordered_commits_from_root
+          original_repo.branch('master').topologically_ordered_commits_from_root
         end
 
         let!(:new_root_commit) do
@@ -161,11 +161,11 @@ class RepositoryMerger
     describe '#import_tag' do
       context 'with a lightweight annotated tag' do
         let(:original_tag) do
-          original_repo.tags['v2.0.0.beta.1']
+          original_repo.tag('v2.0.0.beta.1')
         end
 
         let(:original_commit) do
-          original_repo.branches['origin/master'].topologically_ordered_commits_from_root.find do |commit|
+          original_repo.branch('origin/master').topologically_ordered_commits_from_root.find do |commit|
             commit.id == 'dd11a4714dc51d78a8ba5fec42adaffc6c92ea39'
           end
         end
@@ -211,11 +211,11 @@ class RepositoryMerger
 
       context 'with an annotated tag' do
         let(:original_tag) do
-          original_repo.tags['v3.0.0']
+          original_repo.tag('v3.0.0')
         end
 
         let(:original_commit) do
-          original_repo.branches['origin/master'].topologically_ordered_commits_from_root.find do |commit|
+          original_repo.branch('origin/master').topologically_ordered_commits_from_root.find do |commit|
             commit.id == '91f428f609b37422c08306517e09d2466ab8e516'
           end
         end

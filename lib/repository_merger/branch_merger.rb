@@ -79,7 +79,7 @@ class RepositoryMerger
     end
 
     def current_branch_head_id_in_merged_repo
-      branch = merged_repo.branches[branch_name_in_merged_repo]
+      branch = merged_repo.branch(branch_name_in_merged_repo)
       return nil unless branch
       branch.target_commit.id
     end
@@ -103,7 +103,7 @@ class RepositoryMerger
     end
 
     def original_branches
-      original_repos.map { |repo| repo.branches[branch_name] }.compact
+      original_repos.map { |repo| repo.branch(branch_name) }.compact
     end
 
     def original_repos
