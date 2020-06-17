@@ -16,7 +16,16 @@ class RepositoryMerger
     end
 
     def import_tag(original_tag, new_commit_id:, new_tag_name:)
-      rugged_repo.tags.create(new_tag_name, new_commit_id, original_tag.annotation)
+      # This is to suppress warning messages
+      # `warning: Using the last argument as keyword parameters is deprecated`
+      # from rugged gem until a fixed version is released.
+      # https://github.com/libgit2/rugged/pull/840
+      if original_tag.annotation
+        rugged_repo.tags.create(new_tag_name, new_commit_id, **original_tag.annotation)
+      else
+        rugged_repo.tags.create(new_tag_name, new_commit_id)
+      end
+
       tags[new_tag_name]
     end
 
