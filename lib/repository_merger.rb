@@ -7,13 +7,12 @@ require_relative 'repository_merger/repository'
 require_relative 'repository_merger/tag_importer'
 
 class RepositoryMerger
-  COMMIT_MAP_PATH = 'commit_map.json'
+  attr_reader :original_repo_paths, :merged_repo_path, :commit_map_file_path
 
-  attr_reader :original_repo_paths, :merged_repo_path
-
-  def initialize(original_repo_paths, merged_repo_path:)
+  def initialize(original_repo_paths, merged_repo_path:, commit_map_file_path: 'commit_map.json')
     @original_repo_paths = original_repo_paths
     @merged_repo_path = merged_repo_path
+    @commit_map_file_path = commit_map_file_path
   end
 
   def merge_branches(branch_name, commit_message_transformer: nil)
@@ -37,15 +36,17 @@ class RepositoryMerger
   def commit_map
     @commit_map ||= begin
       commit_map =
-        if File.exist?(COMMIT_MAP_PATH)
-          CommitMap.load_from(COMMIT_MAP_PATH)
+        if commit_map_file_path && File.exist?(commit_map_file_path)
+          CommitMap.load_from(commit_map_file_path)
         else
           CommitMap.new
         end
 
-      at_exit do
-        commit_map.save_to(COMMIT_MAP_PATH)
-        puts "Saved commit map to #{COMMIT_MAP_PATH}."
+      if commit_map_file_path
+        at_exit do
+          commit_map.save_to(commit_map_file_path)
+          puts "Saved commit map to #{commit_map_file_path}."
+        end
       end
 
       commit_map
