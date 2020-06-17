@@ -22,15 +22,17 @@ module GitHelper
     end
   end
 
-  def git_init(path)
-    path = File.expand_path(path)
+  def git_init(repo_name)
+    repo_path = File.join(PathHelper.tmp_path, repo_name)
 
-    FileUtils.rm_rf(path)
-    FileUtils.mkdir_p(path)
+    FileUtils.rm_rf(repo_path)
+    FileUtils.mkdir_p(repo_path)
 
-    Dir.chdir(path) do
+    Dir.chdir(repo_path) do
       `git init`
       yield if block_given?
     end
+
+    repo_path
   end
 end

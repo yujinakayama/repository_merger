@@ -6,9 +6,8 @@ class RepositoryMerger
     include GitHelper
 
     subject(:merged_repo) do
-      path = 'tmp/merged_repo'
-      git_init(path)
-      MergedRepository.new(path)
+      repo_path = git_init('merged_repo')
+      MergedRepository.new(repo_path)
     end
 
     let(:original_repo) do
@@ -106,9 +105,7 @@ class RepositoryMerger
 
       context 'when the second commit contains removal of a file' do
         let(:original_repo) do
-          path = 'tmp/original_repo'
-
-          git_init(path) do
+          repo_path = git_init('original_repo') do
             File.write('some_file.txt', "foo\n")
             `git add .`
             `git commit --message='Initial commit'`
@@ -118,7 +115,7 @@ class RepositoryMerger
             `git commit --message='Remove some_file.txt'`
           end
 
-          Repository.new(path)
+          Repository.new(repo_path)
         end
 
         let(:original_commits) do
