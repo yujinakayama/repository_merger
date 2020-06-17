@@ -115,6 +115,7 @@ class RepositoryMerger
 
       ProgressBar.create(
         format: bar_format,
+        output: repo_merger.log_output,
         title: branch_name,
         total: unprocessed_original_commit_queues.sum { |queue| queue.size }
       )
