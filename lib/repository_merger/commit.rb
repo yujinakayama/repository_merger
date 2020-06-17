@@ -42,6 +42,10 @@ class RepositoryMerger
       repo.rugged_repo.checkout_tree(id, strategy: :force, target_directory: directory_path)
     end
 
+    def revision_id
+      id
+    end
+
     private
 
     def create_parent(parent_rugged_commit)
