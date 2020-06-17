@@ -7,12 +7,13 @@ require_relative 'repository_merger/repository'
 require_relative 'repository_merger/tag_importer'
 
 class RepositoryMerger
-  attr_reader :original_repo_paths, :merged_repo_path, :commit_map_file_path
+  attr_reader :original_repo_paths, :merged_repo_path, :commit_map_file_path, :log_output
 
-  def initialize(original_repo_paths, merged_repo_path:, commit_map_file_path: 'commit_map.json')
+  def initialize(original_repo_paths, merged_repo_path:, commit_map_file_path: 'commit_map.json', log_output: $stdout)
     @original_repo_paths = original_repo_paths
     @merged_repo_path = merged_repo_path
     @commit_map_file_path = commit_map_file_path
+    @log_output = log_output
   end
 
   def merge_branches(branch_name, commit_message_transformer: nil)

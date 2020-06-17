@@ -78,6 +78,7 @@ class RepositoryMerger
 
       ProgressBar.create(
         format: bar_format,
+        output: repo_merger.log_output,
         total: original_tags.size
       )
     end
