@@ -9,7 +9,7 @@ class RepositoryMerger
     describe '#local_name' do
       context 'with a local branch' do
         let(:branch) do
-          repo.branches['master']
+          repo.branch('master')
         end
 
         it 'returns the name' do
@@ -19,7 +19,7 @@ class RepositoryMerger
 
       context 'with a remote-tracking branch' do
         let(:branch) do
-          repo.branches['origin/master']
+          repo.branch('origin/master')
         end
 
         it 'returns a name for suitable for local branch' do
@@ -30,7 +30,7 @@ class RepositoryMerger
 
     describe '#target_commit' do
       let(:branch) do
-        repo.branches['origin/3-0-maintenance']
+        repo.branch('origin/3-0-maintenance')
       end
 
       it "returns the branch's head commit" do
@@ -47,7 +47,7 @@ class RepositoryMerger
       end
 
       let(:branch) do
-        repo.branches['origin/master']
+        repo.branch('origin/master')
       end
 
       # git log --graph --oneline | tail -40

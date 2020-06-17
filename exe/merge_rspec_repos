@@ -16,7 +16,7 @@ def main
 
   repo_merger = RepositoryMerger.new(original_repo_paths, merged_repo_path: merged_repo_path)
 
-  all_branch_names = repo_merger.original_repos.flat_map { |repo| repo.branches.keys }.uniq.sort
+  all_branch_names = repo_merger.original_repos.flat_map { |repo| repo.branches.map(&:name) }.uniq.sort
   target_branch_names = ['origin/master'] + all_branch_names.grep(/\Aorigin\/\d+-\d+-(maintenance|stable)\z/)
 
   target_branch_names.each do |branch_name|

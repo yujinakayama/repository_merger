@@ -26,7 +26,7 @@ class RepositoryMerger
       new_tag_name = tag_name_transformer.call(original_tag)
 
       if new_tag_name
-        if merged_repo.tags[new_tag_name]
+        if merged_repo.tag(new_tag_name)
           progressbar.log "    The new tag #{new_tag_name.inspect} is already imported. Skipping."
         else
           progressbar.log "    Importing as #{new_tag_name.inspect}."
@@ -56,7 +56,7 @@ class RepositoryMerger
     end
 
     def original_tags
-      @original_tags ||= original_repos.flat_map { |repo| repo.tags.values }
+      @original_tags ||= original_repos.flat_map(&:tags)
     end
 
     def original_repos
