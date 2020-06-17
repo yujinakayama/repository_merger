@@ -1,7 +1,10 @@
 require 'fileutils'
+require 'open3'
 require 'shellwords'
 
 module GitHelper
+  GitError = Class.new(StandardError)
+
   module_function
 
   def git_show(commit, path_prefix = 'PATH:')
@@ -9,16 +12,28 @@ module GitHelper
       # By default `git show` outputs `index` lines (e.g. `index 00000000..ecf36731`)
       # in 7 or 8 digits (not sure what makes the difference though).
       # We need to spcify --full-index option is make the digits consistent.
-      command = ['git', 'show', '--format=fuller', '--full-index']
-      command.concat(["--src-prefix=#{path_prefix}", "--dst-prefix=#{path_prefix}"]) if path_prefix
-      command << commit.id
-      `#{command.shelljoin}`
+      args = ['show', '--format=fuller', '--full-index']
+      args.concat(["--src-prefix=#{path_prefix}", "--dst-prefix=#{path_prefix}"]) if path_prefix
+      args << commit.id
+      git(args)
     end
   end
 
-  def git_log(repo, branch_name)
-    Dir.chdir(repo.path) do
-      `git log --format=%s --graph #{branch_name}`
+  def git_graph(repo_path, branch_names = nil, format: nil)
+    args = ['log', '--graph']
+    args << "--format=#{format}" if format
+
+    unless branch_names
+      Dir.chdir(repo_path) do
+        ref_names = git(['for-each-ref', '--format', '%(refname)']).each_line.map(&:chomp)
+        branch_names = ref_names.grep(%r{\Arefs/heads/}).map { |ref| ref.sub(%r{\Arefs/heads/}, '') }
+      end
+    end
+
+    args.concat(Array(branch_names))
+
+    Dir.chdir(repo_path) do
+      git(args)
     end
   end
 
@@ -29,10 +44,24 @@ module GitHelper
     FileUtils.mkdir_p(repo_path)
 
     Dir.chdir(repo_path) do
-      `git init`
+      git('init')
       yield if block_given?
     end
 
     repo_path
+  end
+
+  def git(arg)
+    args = arg.is_a?(Array) ? arg : arg.shellsplit
+    stdout, stderr, status = Open3.capture3('git', *args)
+    raise GitError, stderr unless status.success?
+    stdout.each_line.map { |line| line.sub(/ +$/, '') }.join
+  end
+
+  def with_git_date(date)
+    original_env = ENV.to_h
+    ENV['GIT_AUTHOR_DATE'] = ENV['GIT_COMMITTER_DATE'] = date
+    yield
+    ENV.replace(original_env)
   end
 end

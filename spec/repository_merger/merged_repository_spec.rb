@@ -52,7 +52,7 @@ class RepositoryMerger
           +LICENSE
         END
 
-        expect(git_log(merged_repo, 'some_branch')).to eq(<<~END)
+        expect(git_graph(merged_repo.path, 'some_branch', format: '%s')).to eq(<<~END)
           * Initial commit to rspec-core.
         END
       end
@@ -96,7 +96,7 @@ class RepositoryMerger
             +(The MIT License)
           END
 
-          expect(git_log(merged_repo, 'some_branch')).to eq(<<~END)
+          expect(git_graph(merged_repo.path, 'some_branch', format: '%s')).to eq(<<~END)
             * Version bump to 0.0.0
             * Initial commit to rspec-core.
           END
