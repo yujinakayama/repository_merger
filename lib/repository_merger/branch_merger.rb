@@ -46,7 +46,7 @@ class RepositoryMerger
           [current_branch_head_id_in_merged_repo].compact
         else
           original_commit.parents.map do |original_parent_commit|
-            if original_parent_commit.mainline?
+            if original_commit.mainline? && original_parent_commit.mainline?
               current_branch_head_id_in_merged_repo
             else
               commit_map.commit_id_in_merged_repo_for(original_parent_commit)
