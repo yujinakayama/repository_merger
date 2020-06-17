@@ -126,13 +126,13 @@ RSpec.describe RepositoryMerger do
         | * 2020-01-01 00:03:00 +0000 [repo_a] feature-a 1
         * |   2020-01-01 00:04:10 +0000 [repo_b] Merge branch 'feature-b'
         |\ \
+        | * | 2020-01-01 00:03:10 +0000 [repo_b] feature-b 1
+        * | | 2020-01-01 00:04:00 +0000 [repo_a] master 4
         | |/
         |/|
-        | * 2020-01-01 00:03:10 +0000 [repo_b] feature-b 1
-        * | 2020-01-01 00:04:00 +0000 [repo_a] master 4
+        * | 2020-01-01 00:02:00 +0000 [repo_a] master 3 / feature-a branching
+        * | 2020-01-01 00:01:20 +0000 [repo_b] master 3
         |/
-        * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / feature-a branching
-        * 2020-01-01 00:01:20 +0000 [repo_b] master 3
         * 2020-01-01 00:01:10 +0000 [repo_b] master 2 / feature-b branching
         * 2020-01-01 00:01:00 +0000 [repo_a] master 2
         * 2020-01-01 00:00:10 +0000 [repo_b] master 1
