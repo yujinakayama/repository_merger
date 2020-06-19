@@ -7,12 +7,12 @@ class RepositoryMerger
   class BranchMerger
     attr_reader :repo_merger, :target_branch_name, :all_branch_names, :commit_message_transformer, :progressbar
 
-    def initialize(repo_merger, target_branch_name:, all_branch_names:, commit_message_transformer: nil)
+    def initialize(repo_merger, target_branch_name:, all_branch_names:, commit_message_transformer: nil, progressbar_title: nil)
       @repo_merger = repo_merger
       @target_branch_name = target_branch_name
       @all_branch_names = all_branch_names
       @commit_message_transformer = commit_message_transformer
-      @progressbar = create_progressbar
+      @progressbar = create_progressbar(progressbar_title)
     end
 
     def run
@@ -139,15 +139,15 @@ class RepositoryMerger
       repo_merger.commit_map
     end
 
-    def create_progressbar
+    def create_progressbar(title)
       # 185/407 commits |====== 45 ======>                    |  ETA: 00:00:04
       # %c / %C         |       %w       >         %i         |       %e
-      bar_format = " %t: %c/%C commits |%w>%i| %e "
+      bar_format = " %t %c/%C commits |%w>%i| %e "
 
       ProgressBar.create(
         format: bar_format,
         output: repo_merger.log_output,
-        title: target_branch_name,
+        title: title,
         total: unprocessed_original_commit_queue.size
       )
     end

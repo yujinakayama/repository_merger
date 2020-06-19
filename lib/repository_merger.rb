@@ -17,12 +17,13 @@ class RepositoryMerger
   end
 
   def merge_branches(branch_names, commit_message_transformer: nil)
-    branch_names.each do |target_branch_name|
+    branch_names.each_with_index do |target_branch_name, index|
       branch_merger = BranchMerger.new(
         self,
         target_branch_name: target_branch_name,
         all_branch_names: branch_names,
-        commit_message_transformer: commit_message_transformer
+        commit_message_transformer: commit_message_transformer,
+        progressbar_title: "#{index + 1}/#{branch_names.size} branches: #{target_branch_name}"
       )
 
       branch_merger.run
