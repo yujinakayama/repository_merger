@@ -53,7 +53,7 @@ class RepositoryMerger
     end
 
     def update_branch_in_merged_repo_if_needed(original_commit)
-      return unless original_commit.mainline?
+      return unless mainline?(original_commit)
 
       commit_id_in_merged_repo = commit_map.commit_id_in_merged_repo_for(original_commit)
       merged_repo.create_or_update_branch(branch_name_in_merged_repo, commit_id: commit_id_in_merged_repo)
@@ -65,7 +65,7 @@ class RepositoryMerger
           [current_branch_head_id_in_merged_repo].compact
         else
           original_commit.parents.map do |original_parent_commit|
-            if original_commit.mainline? && original_parent_commit.mainline?
+            if mainline?(original_commit) && mainline?(original_parent_commit)
               current_branch_head_id_in_merged_repo
             else
               commit_map.commit_id_in_merged_repo_for(original_parent_commit)
@@ -84,6 +84,11 @@ class RepositoryMerger
         commit_id_in_merged_repo: new_commit_in_merged_repo.id,
         original_commit: original_commit
       )
+    end
+
+    def mainline?(original_commit)
+      original_branch = original_branches_by_repo[original_commit.repo]
+      original_branch.mainline?(original_commit)
     end
 
     def current_branch_head_id_in_merged_repo
@@ -110,6 +115,12 @@ class RepositoryMerger
         target_branch_name: target_branch_name,
         all_branch_names: all_branch_names
       )
+    end
+
+    def original_branches_by_repo
+      @original_branches_by_repo ||= original_branches.each_with_object({}) do |original_branch, hash|
+        hash[original_branch.repo] = original_branch
+      end
     end
 
     def original_branches
