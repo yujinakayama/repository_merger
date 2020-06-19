@@ -54,11 +54,10 @@ class RepositoryMerger
         committer: original_rugged_commit.committer,
         author: original_rugged_commit.author,
         tree: rugged_repo.index.write_tree,
-        update_ref: branch_name && branch(branch_name) ? "refs/heads/#{branch_name}" : nil,
         parents: new_parent_ids,
       })
 
-      if branch_name && branch(branch_name).nil?
+      if branch_name
         create_or_update_branch(branch_name, commit_id: new_commit_id)
       end
 

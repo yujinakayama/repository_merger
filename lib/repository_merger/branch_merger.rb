@@ -47,22 +47,21 @@ class RepositoryMerger
       progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
 
       if commit_map.commit_id_in_merged_repo_for(original_commit)
-        update_branch_in_merged_repo_if_needed(original_commit)
+        progressbar.log "    Already imported."
       else
         import_commit_into_merged_repo(original_commit)
       end
+
+      update_branch_in_merged_repo_if_needed(original_commit)
 
       progressbar.increment
     end
 
     def update_branch_in_merged_repo_if_needed(original_commit)
-      if original_commit.mainline?
-        progressbar.log "    Already imported. Updating branch target to the commit."
-        commit_id_in_merged_repo = commit_map.commit_id_in_merged_repo_for(original_commit)
-        merged_repo.create_or_update_branch(branch_name_in_merged_repo, commit_id: commit_id_in_merged_repo)
-      else
-        progressbar.log "    Already imported. Skipping."
-      end
+      return unless original_commit.mainline?
+
+      commit_id_in_merged_repo = commit_map.commit_id_in_merged_repo_for(original_commit)
+      merged_repo.create_or_update_branch(branch_name_in_merged_repo, commit_id: commit_id_in_merged_repo)
     end
 
     def import_commit_into_merged_repo(original_commit)
@@ -83,8 +82,7 @@ class RepositoryMerger
         original_commit,
         new_parent_ids: parent_commit_ids_in_merged_repo,
         subdirectory: original_commit.repo.name,
-        message: commit_message_from(original_commit),
-        branch_name: original_commit.mainline? ? branch_name_in_merged_repo : nil
+        message: commit_message_from(original_commit)
       )
 
       commit_map.register(
