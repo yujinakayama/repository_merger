@@ -16,9 +16,17 @@ class RepositoryMerger
     @log_output = log_output
   end
 
-  def merge_branches(branch_name, commit_message_transformer: nil)
-    branch_merger = BranchMerger.new(self, branch_name: branch_name, commit_message_transformer: commit_message_transformer)
-    branch_merger.run
+  def merge_branches(branch_names, commit_message_transformer: nil)
+    branch_names.each do |target_branch_name|
+      branch_merger = BranchMerger.new(
+        self,
+        target_branch_name: target_branch_name,
+        all_branch_names: branch_names,
+        commit_message_transformer: commit_message_transformer
+      )
+
+      branch_merger.run
+    end
   end
 
   def import_tags(tag_name_transformer:)
