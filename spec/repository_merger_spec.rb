@@ -115,8 +115,8 @@ RSpec.describe RepositoryMerger do
         end
       end
 
-      pending 'imports mainline commits by mixing in date order and non-mainline commits without mixing' do
-        repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
+      it 'imports mainline commits by mixing in date order and non-mainline commits without mixing' do
+        repo_merger.merge_branches(['master'], commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
           * 2020-01-01 00:07:10 +0000 [repo_b] master 4 (HEAD -> master)
@@ -191,12 +191,8 @@ RSpec.describe RepositoryMerger do
         end
       end
 
-      before do
-        repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
-      end
-
       it 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
-        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches(['master', 'maintenance'], commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
           * 2020-01-01 00:05:00 +0000 [repo_a] master 4 (HEAD -> master)
@@ -259,13 +255,8 @@ RSpec.describe RepositoryMerger do
         end
       end
 
-      before do
-        repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
-        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
-      end
-
       it 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
-        repo_merger.merge_branches('bugfix', commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches(['master', 'maintenance', 'bugfix'], commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
           * 2020-01-01 00:03:00 +0000 [repo_a] bugfix 1 (bugfix)
@@ -307,12 +298,8 @@ RSpec.describe RepositoryMerger do
         end
       end
 
-      before do
-        repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
-      end
-
-      pending 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
-        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
+      it 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
+        repo_merger.merge_branches(['master', 'maintenance'], commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
           * 2020-01-01 00:03:00 +0000 [repo_a] maintenance 1 (maintenance)
