@@ -140,58 +140,62 @@ class RepositoryMerger
 
       def initialize(branches)
         @branches = branches
-        @current_queues, @next_queues = classify_commits
       end
 
       def next
-        queue_having_oldest_next_commit =
-          current_queues.reject(&:empty?).min_by { |queue| queue.first.commit_time }
+        return nil unless current_queues
+
+        queue_having_oldest_next_commit = current_queues.reject(&:empty?).min_by do |queue|
+          queue.first.commit_time
+        end
 
         if queue_having_oldest_next_commit
           queue_having_oldest_next_commit.shift
-        elsif next_queues
-          @current_queues = next_queues
-          @next_queues = nil
-          self.next
         else
-          nil
+          switch_to_next_queues
+          self.next
         end
       end
 
       def size
-        [current_queues, next_queues].compact.flatten.sum(&:size)
+        queues_by_shared_count.values.flatten.size
       end
 
       private
 
-      def classify_commits
-        priority_commit_queues = []
-        non_priority_commit_queues = []
+      def current_queues
+        queues_by_shared_count[current_queues_key]
+      end
 
-        branches.each do |branch|
-          priority_commit_queue, non_priority_commit_queue = classify_commits_in(branch)
-          priority_commit_queues << priority_commit_queue
-          non_priority_commit_queues << non_priority_commit_queue
+      def switch_to_next_queues
+        queues_by_shared_count.delete(current_queues_key)
+      end
+
+      def current_queues_key
+        queues_by_shared_count.keys.max
+      end
+
+      def queues_by_shared_count
+        @queues_by_shared_count ||= branches.each_with_object({}) do |branch, queues_by_shared_count|
+          group_commits_by_shared_count(branch).each do |shared_count, commits|
+            queues_by_shared_count[shared_count] ||= []
+            queues_by_shared_count[shared_count] << commits
+          end
         end
-
-        [priority_commit_queues, non_priority_commit_queues]
       end
 
-      def classify_commits_in(target_branch)
-        other_branches = target_branch.repo.branches - [target_branch]
+      def group_commits_by_shared_count(target_branch)
+        all_commits_in_repo = target_branch.repo.branches.flat_map(&:topologically_ordered_commits_from_root)
 
-        commits_contained_in_other_branches = other_branches.each_with_object(Set.new) do |other_branch, commits|
-          commits.merge(other_branch.topologically_ordered_commits_from_root)
-        end.to_a
+        shared_counts_by_commit = all_commits_in_repo.group_by(&:itself).map do |commit, array|
+          [commit, array.size]
+        end.to_h
 
-        priority_commits = target_branch.topologically_ordered_commits_from_root & commits_contained_in_other_branches.to_a
-        non_priority_commits = target_branch.topologically_ordered_commits_from_root - priority_commits
-
-        [priority_commits, non_priority_commits]
-      end
-
-      def repos
-        @repos ||= branches.map(&:repo)
+        target_branch.topologically_ordered_commits_from_root.each_with_object({}) do |commit, commits_by_shared_count|
+          shared_count = shared_counts_by_commit[commit]
+          commits_by_shared_count[shared_count] ||= []
+          commits_by_shared_count[shared_count] << commit
+        end
       end
     end
   end
