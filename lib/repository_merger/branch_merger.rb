@@ -32,12 +32,22 @@ class RepositoryMerger
       progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
 
       if commit_map.commit_id_in_merged_repo_for(original_commit)
-        progressbar.log "    Already imported. Skipping."
+        update_branch_in_merged_repo_if_needed(original_commit)
       else
         import_commit_into_merged_repo(original_commit)
       end
 
       progressbar.increment
+    end
+
+    def update_branch_in_merged_repo_if_needed(original_commit)
+      if original_commit.mainline?
+        progressbar.log "    Already imported. Updating branch target to the commit."
+        commit_id_in_merged_repo = commit_map.commit_id_in_merged_repo_for(original_commit)
+        merged_repo.create_or_update_branch(branch_name_in_merged_repo, commit_id: commit_id_in_merged_repo)
+      else
+        progressbar.log "    Already imported. Skipping."
+      end
     end
 
     def import_commit_into_merged_repo(original_commit)
