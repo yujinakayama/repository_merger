@@ -264,7 +264,7 @@ RSpec.describe RepositoryMerger do
         repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
       end
 
-      pending 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
+      it 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
         repo_merger.merge_branches('bugfix', commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
@@ -274,6 +274,52 @@ RSpec.describe RepositoryMerger do
           * 2020-01-01 00:00:30 +0000 [repo_b] maintenance 1 / bugfix branching
           * 2020-01-01 00:01:00 +0000 [repo_a] master 2 / maintenance branching (HEAD -> master)
           * 2020-01-01 00:00:20 +0000 [repo_b] master 2 / maintenance branching
+          * 2020-01-01 00:00:10 +0000 [repo_b] master 1
+          * 2020-01-01 00:00:00 +0000 [repo_a] master 1
+        END
+      end
+    end
+
+    context 'when importing multiple sets of branches sharing some commits, and one of the repos does not have a specified branch' do
+      # * 2020-01-01 00:03:00 +0000 maintenance 1 (HEAD -> maintenance)
+      # * 2020-01-01 00:02:00 +0000 master 3 / maintenance branching (master)
+      # * 2020-01-01 00:01:00 +0000 master 2
+      # * 2020-01-01 00:00:00 +0000 master 1
+      let(:repo_a_path) do
+        git_init('repo_a') do
+          git_commit(time: '00:00:00', message: 'master 1')
+          git_commit(time: '00:01:00', message: 'master 2')
+          git_commit(time: '00:02:00', message: 'master 3 / maintenance branching')
+
+          git('checkout -b maintenance')
+          git_commit(time: '00:03:00', message: 'maintenance 1')
+        end
+      end
+
+      # * 2020-01-01 00:00:30 +0000 master 3 (HEAD -> master)
+      # * 2020-01-01 00:00:20 +0000 master 2
+      # * 2020-01-01 00:00:10 +0000 master 1
+      let(:repo_b_path) do
+        git_init('repo_b') do
+          git_commit(time: '00:00:10', message: 'master 1')
+          git_commit(time: '00:00:20', message: 'master 2')
+          git_commit(time: '00:00:30', message: 'master 3')
+        end
+      end
+
+      before do
+        repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
+      end
+
+      pending 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
+        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
+
+        expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
+          * 2020-01-01 00:03:00 +0000 [repo_a] maintenance 1 (maintenance)
+          * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching (HEAD -> master)
+          * 2020-01-01 00:01:00 +0000 [repo_a] master 2
+          * 2020-01-01 00:00:30 +0000 [repo_b] master 3
+          * 2020-01-01 00:00:20 +0000 [repo_b] master 2
           * 2020-01-01 00:00:10 +0000 [repo_b] master 1
           * 2020-01-01 00:00:00 +0000 [repo_a] master 1
         END
