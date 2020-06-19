@@ -11,6 +11,7 @@ GEM
     pry-byebug (3.9.0)
       byebug (~> 11.0)
       pry (~> 0.13.0)
+    rake (13.0.1)
     rspec (3.9.0)
       rspec-core (~> 3.9.0)
       rspec-expectations (~> 3.9.0)
@@ -32,6 +33,7 @@ PLATFORMS
 
 DEPENDENCIES
   pry-byebug
+  rake
   rspec
   ruby-progressbar
   rugged

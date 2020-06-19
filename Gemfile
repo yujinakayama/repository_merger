@@ -3,7 +3,11 @@ source 'https://rubygems.org'
 
 gem 'rugged'
 gem 'ruby-progressbar'
-gem 'pry-byebug'
+
+group :development do
+  gem 'pry-byebug'
+  gem 'rake'
+end
 
 group :test do
   gem 'rspec'
