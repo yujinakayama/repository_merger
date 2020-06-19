@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'branch_commit'
+require_relative 'commit'
 
 require 'rugged'
 require 'set'
@@ -36,7 +36,7 @@ class RepositoryMerger
     def target_commit
       @target_commit ||= begin
         rugged_commit = rugged_repo.lookup(rugged_branch.target_id)
-        BranchCommit.new(rugged_commit, self)
+        Commit.new(rugged_commit, repo)
       end
     end
 
@@ -45,7 +45,7 @@ class RepositoryMerger
         walker = Rugged::Walker.new(rugged_repo)
         walker.sorting(Rugged::SORT_TOPO | Rugged::SORT_REVERSE)
         walker.push(rugged_branch.target_id)
-        walker.map { |rugged_commit| BranchCommit.new(rugged_commit, self) }.freeze
+        walker.map { |rugged_commit| Commit.new(rugged_commit, repo) }.freeze
       end
     end
 
