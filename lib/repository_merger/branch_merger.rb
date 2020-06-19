@@ -21,7 +21,7 @@ class RepositoryMerger
         return
       end
 
-      while (original_commit = next_original_commit_to_process!)
+      while (original_commit = unprocessed_original_commit_queue.next)
         process_commit(original_commit)
       end
     end
@@ -34,13 +34,6 @@ class RepositoryMerger
       return false if commit_ids_in_merged_repo.any?(&:nil?)
 
       commit_ids_in_merged_repo.include?(current_branch_head_id_in_merged_repo)
-    end
-
-    def next_original_commit_to_process!
-      queue_having_oldest_next_commit =
-        unprocessed_original_commit_queues.reject(&:empty?).min_by { |queue| queue.first.commit_time }
-
-      queue_having_oldest_next_commit&.shift
     end
 
     def process_commit(original_commit)
@@ -109,10 +102,8 @@ class RepositoryMerger
       @branch_name_in_merged_repo ||= original_branches.first.local_name
     end
 
-    def unprocessed_original_commit_queues
-      @unprocessed_original_commit_queues ||= original_branches.map do |branch|
-        branch.topologically_ordered_commits_from_root.dup
-      end
+    def unprocessed_original_commit_queue
+      @unprocessed_original_commit_queue ||= OriginalCommitQueue.new(original_branches)
     end
 
     def original_branches
@@ -140,8 +131,68 @@ class RepositoryMerger
         format: bar_format,
         output: repo_merger.log_output,
         title: branch_name,
-        total: unprocessed_original_commit_queues.sum { |queue| queue.size }
+        total: unprocessed_original_commit_queue.size
       )
+    end
+
+    class OriginalCommitQueue
+      attr_reader :branches, :current_queues, :next_queues
+
+      def initialize(branches)
+        @branches = branches
+        @current_queues, @next_queues = classify_commits
+      end
+
+      def next
+        queue_having_oldest_next_commit =
+          current_queues.reject(&:empty?).min_by { |queue| queue.first.commit_time }
+
+        if queue_having_oldest_next_commit
+          queue_having_oldest_next_commit.shift
+        elsif next_queues
+          @current_queues = next_queues
+          @next_queues = nil
+          self.next
+        else
+          nil
+        end
+      end
+
+      def size
+        [current_queues, next_queues].compact.flatten.sum(&:size)
+      end
+
+      private
+
+      def classify_commits
+        priority_commit_queues = []
+        non_priority_commit_queues = []
+
+        branches.each do |branch|
+          priority_commit_queue, non_priority_commit_queue = classify_commits_in(branch)
+          priority_commit_queues << priority_commit_queue
+          non_priority_commit_queues << non_priority_commit_queue
+        end
+
+        [priority_commit_queues, non_priority_commit_queues]
+      end
+
+      def classify_commits_in(target_branch)
+        other_branches = target_branch.repo.branches - [target_branch]
+
+        commits_contained_in_other_branches = other_branches.each_with_object(Set.new) do |other_branch, commits|
+          commits.merge(other_branch.topologically_ordered_commits_from_root)
+        end.to_a
+
+        priority_commits = target_branch.topologically_ordered_commits_from_root & commits_contained_in_other_branches.to_a
+        non_priority_commits = target_branch.topologically_ordered_commits_from_root - priority_commits
+
+        [priority_commits, non_priority_commits]
+      end
+
+      def repos
+        @repos ||= branches.map(&:repo)
+      end
     end
   end
 end

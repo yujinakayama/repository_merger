@@ -7,8 +7,22 @@ require 'set'
 
 class RepositoryMerger
   Branch = Struct.new(:rugged_branch, :repo) do
+    def ==(other)
+      repo == other.repo && canonical_name == other.canonical_name
+    end
+
+    alias eql? ==
+
+    def hash
+      repo.hash ^ name.hash
+    end
+
     def name
       rugged_branch.name
+    end
+
+    def canonical_name
+      rugged_branch.canonical_name
     end
 
     def local_name
