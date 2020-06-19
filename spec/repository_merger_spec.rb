@@ -42,6 +42,10 @@ RSpec.describe RepositoryMerger do
       )
     end
 
+    let(:merged_repo_path) do
+      git_init('merged_repo')
+    end
+
     let(:log_output) do
       StringIO.new
     end
@@ -52,96 +56,172 @@ RSpec.describe RepositoryMerger do
       end
     end
 
-    # * 2020-01-01 00:07:00 +0000 master 5
-    # *   2020-01-01 00:06:00 +0000 Merge branch 'feature-a'
-    # |\
-    # | * 2020-01-01 00:05:00 +0000 feature-a 2
-    # | * 2020-01-01 00:03:00 +0000 feature-a 1
-    # * | 2020-01-01 00:04:00 +0000 master 4
-    # |/
-    # * 2020-01-01 00:02:00 +0000 master 3 / feature-a branching
-    # * 2020-01-01 00:01:00 +0000 master 2
-    # * 2020-01-01 00:00:00 +0000 master 1
-    let(:repo_a_path) do
-      git_init('repo_a') do
-        git_commit(time: '00:00:00', message: 'master 1')
-        git_commit(time: '00:01:00', message: 'master 2')
-        git_commit(time: '00:02:00', message: 'master 3 / feature-a branching')
+    context 'when importing a single set of branches' do
+      # * 2020-01-01 00:07:00 +0000 master 5
+      # *   2020-01-01 00:06:00 +0000 Merge branch 'feature-a'
+      # |\
+      # | * 2020-01-01 00:05:00 +0000 feature-a 2
+      # | * 2020-01-01 00:03:00 +0000 feature-a 1
+      # * | 2020-01-01 00:04:00 +0000 master 4
+      # |/
+      # * 2020-01-01 00:02:00 +0000 master 3 / feature-a branching
+      # * 2020-01-01 00:01:00 +0000 master 2
+      # * 2020-01-01 00:00:00 +0000 master 1
+      let(:repo_a_path) do
+        git_init('repo_a') do
+          git_commit(time: '00:00:00', message: 'master 1')
+          git_commit(time: '00:01:00', message: 'master 2')
+          git_commit(time: '00:02:00', message: 'master 3 / feature-a branching')
 
-        git('checkout -b feature-a')
-        git_commit(time: '00:03:00', message: 'feature-a 1')
+          git('checkout -b feature-a')
+          git_commit(time: '00:03:00', message: 'feature-a 1')
 
-        git('checkout master')
-        git_commit(time: '00:04:00', message: 'master 4')
+          git('checkout master')
+          git_commit(time: '00:04:00', message: 'master 4')
 
-        git('checkout feature-a')
-        git_commit(time: '00:05:00', message: 'feature-a 2')
+          git('checkout feature-a')
+          git_commit(time: '00:05:00', message: 'feature-a 2')
 
-        git('checkout master')
-        git_merge('feature-a', time: '00:06:00')
-        git_commit(time: '00:07:00', message: 'master 5')
+          git('checkout master')
+          git_merge('feature-a', time: '00:06:00')
+          git_commit(time: '00:07:00', message: 'master 5')
+        end
+      end
+
+      # * 2020-01-01 00:07:10 +0000 master 4
+      # *   2020-01-01 00:04:10 +0000 Merge branch 'feature-b'
+      # |\
+      # | * 2020-01-01 00:03:10 +0000 feature-b 1
+      # * | 2020-01-01 00:01:20 +0000 master 3
+      # |/
+      # * 2020-01-01 00:01:10 +0000 master 2 / feature-b branching
+      # * 2020-01-01 00:00:10 +0000 master 1
+      let(:repo_b_path) do
+        git_init('repo_b') do
+          git_commit(time: '00:00:10', message: 'master 1')
+          git_commit(time: '00:01:10', message: 'master 2 / feature-b branching')
+
+          git('checkout -b feature-b')
+
+          git('checkout master')
+          git_commit(time: '00:01:20', message: 'master 3')
+
+          git('checkout feature-b')
+          git_commit(time: '00:03:10', message: 'feature-b 1')
+
+          git('checkout master')
+          git_merge('feature-b', time: '00:04:10')
+          git_commit(time: '00:07:10', message: 'master 4')
+        end
+      end
+
+      it 'imports mainline commits by mixing in date order and non-mainline commits without mixing' do
+        repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
+
+        expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
+          * 2020-01-01 00:07:10 +0000 [repo_b] master 4 (HEAD -> master)
+          * 2020-01-01 00:07:00 +0000 [repo_a] master 5
+          *   2020-01-01 00:06:00 +0000 [repo_a] Merge branch 'feature-a'
+          |\
+          | * 2020-01-01 00:05:00 +0000 [repo_a] feature-a 2
+          | * 2020-01-01 00:03:00 +0000 [repo_a] feature-a 1
+          * |   2020-01-01 00:04:10 +0000 [repo_b] Merge branch 'feature-b'
+          |\ \
+          | * | 2020-01-01 00:03:10 +0000 [repo_b] feature-b 1
+          * | | 2020-01-01 00:04:00 +0000 [repo_a] master 4
+          | |/
+          |/|
+          * | 2020-01-01 00:02:00 +0000 [repo_a] master 3 / feature-a branching
+          * | 2020-01-01 00:01:20 +0000 [repo_b] master 3
+          |/
+          * 2020-01-01 00:01:10 +0000 [repo_b] master 2 / feature-b branching
+          * 2020-01-01 00:01:00 +0000 [repo_a] master 2
+          * 2020-01-01 00:00:10 +0000 [repo_b] master 1
+          * 2020-01-01 00:00:00 +0000 [repo_a] master 1
+        END
+
+        expect(commit_fingerprints_in(merged_repo_path, 'master')).to contain_exactly(
+          *(commit_fingerprints_in(repo_a_path, 'master') + commit_fingerprints_in(repo_b_path, 'master'))
+        )
       end
     end
 
-    # * 2020-01-01 00:07:10 +0000 master 4
-    # *   2020-01-01 00:04:10 +0000 Merge branch 'feature-b'
-    # |\
-    # | * 2020-01-01 00:03:10 +0000 feature-b 1
-    # * | 2020-01-01 00:01:20 +0000 master 3
-    # |/
-    # * 2020-01-01 00:01:10 +0000 master 2 / feature-b branching
-    # * 2020-01-01 00:00:10 +0000 master 1
-    let(:repo_b_path) do
-      git_init('repo_b') do
-        git_commit(time: '00:00:10', message: 'master 1')
-        git_commit(time: '00:01:10', message: 'master 2 / feature-b branching')
+    context "when importing multiple sets of branches sharing some commits, and some non-shared commits have earlier commit time than another repo's branching point commit" do
+      # * 2020-01-01 00:05:00 +0000 master 4 (HEAD -> master)
+      # | * 2020-01-01 00:04:00 +0000 maintenance 2 (maintenance)
+      # | * 2020-01-01 00:03:00 +0000 maintenance 1
+      # |/
+      # * 2020-01-01 00:02:00 +0000 master 3 / maintenance branching
+      # * 2020-01-01 00:01:00 +0000 master 2
+      # * 2020-01-01 00:00:00 +0000 master 1
+      let(:repo_a_path) do
+        git_init('repo_a') do
+          git_commit(time: '00:00:00', message: 'master 1')
+          git_commit(time: '00:01:00', message: 'master 2')
+          git_commit(time: '00:02:00', message: 'master 3 / maintenance branching')
 
-        git('checkout -b feature-b')
+          git('checkout -b maintenance')
+          git_commit(time: '00:03:00', message: 'maintenance 1')
+          git_commit(time: '00:04:00', message: 'maintenance 2')
 
-        git('checkout master')
-        git_commit(time: '00:01:20', message: 'master 3')
-
-        git('checkout feature-b')
-        git_commit(time: '00:03:10', message: 'feature-b 1')
-
-        git('checkout master')
-        git_merge('feature-b', time: '00:04:10')
-        git_commit(time: '00:07:10', message: 'master 4')
+          git('checkout master')
+          git_commit(time: '00:05:00', message: 'master 4')
+        end
       end
-    end
 
-    let(:merged_repo_path) do
-      git_init('merged_repo')
-    end
+      # * 2020-01-01 00:04:10 +0000 master 3 (HEAD -> master)
+      # | * 2020-01-01 00:03:10 +0000 maintenance 3 (maintenance)
+      # | * 2020-01-01 00:00:40 +0000 maintenance 2 (earlier than repo_a's branching point in date order)
+      # | * 2020-01-01 00:00:30 +0000 maintenance 1 (earlier than repo_a's branching point in date order)
+      # |/
+      # * 2020-01-01 00:00:20 +0000 master 2 / maintenance branching
+      # * 2020-01-01 00:00:10 +0000 master 1
+      let(:repo_b_path) do
+        git_init('repo_b') do
+          git_commit(time: '00:00:10', message: 'master 1')
+          git_commit(time: '00:00:20', message: 'master 2 / maintenance branching')
 
-    it 'imports mainline commits by mixing in date order and non-mainline commits without mixing' do
-      repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
+          git('checkout -b maintenance')
+          git_commit(time: '00:00:30', message: "maintenance 1 (earlier than repo_a's branching point in date order)")
+          git_commit(time: '00:00:40', message: "maintenance 2 (earlier than repo_a's branching point in date order)")
+          git_commit(time: '00:03:10', message: 'maintenance 3')
 
-      expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
-        * 2020-01-01 00:07:10 +0000 [repo_b] master 4 (HEAD -> master)
-        * 2020-01-01 00:07:00 +0000 [repo_a] master 5
-        *   2020-01-01 00:06:00 +0000 [repo_a] Merge branch 'feature-a'
-        |\
-        | * 2020-01-01 00:05:00 +0000 [repo_a] feature-a 2
-        | * 2020-01-01 00:03:00 +0000 [repo_a] feature-a 1
-        * |   2020-01-01 00:04:10 +0000 [repo_b] Merge branch 'feature-b'
-        |\ \
-        | * | 2020-01-01 00:03:10 +0000 [repo_b] feature-b 1
-        * | | 2020-01-01 00:04:00 +0000 [repo_a] master 4
-        | |/
-        |/|
-        * | 2020-01-01 00:02:00 +0000 [repo_a] master 3 / feature-a branching
-        * | 2020-01-01 00:01:20 +0000 [repo_b] master 3
-        |/
-        * 2020-01-01 00:01:10 +0000 [repo_b] master 2 / feature-b branching
-        * 2020-01-01 00:01:00 +0000 [repo_a] master 2
-        * 2020-01-01 00:00:10 +0000 [repo_b] master 1
-        * 2020-01-01 00:00:00 +0000 [repo_a] master 1
-      END
+          git('checkout master')
+          git_commit(time: '00:04:10', message: 'master 3')
+        end
+      end
 
-      expect(commit_fingerprints_in(merged_repo_path, 'master')).to contain_exactly(
-        *(commit_fingerprints_in(repo_a_path, 'master') + commit_fingerprints_in(repo_b_path, 'master'))
-      )
+      before do
+        repo_merger.merge_branches('master', commit_message_transformer: commit_message_transformer)
+      end
+
+      pending 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
+        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
+
+        expect(commit_graph_of(merged_repo_path)).to eq(<<~'END')
+          * 2020-01-01 00:05:00 +0000 [repo_a] master 4 (HEAD -> master)
+          * 2020-01-01 00:04:10 +0000 [repo_b] master 3
+          | * 2020-01-01 00:04:00 +0000 [repo_a] maintenance 2 (maintenance)
+          | * 2020-01-01 00:03:10 +0000 [repo_b] maintenance 3
+          | * 2020-01-01 00:03:00 +0000 [repo_a] maintenance 1
+          | * 2020-01-01 00:00:40 +0000 [repo_b] maintenance 2 (earlier than repo_a's branching point in date order)
+          | * 2020-01-01 00:00:30 +0000 [repo_b] maintenance 1 (earlier than repo_a's branching point in date order)
+          |/
+          * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching
+          * 2020-01-01 00:01:00 +0000 [repo_a] master 2
+          * 2020-01-01 00:00:20 +0000 [repo_b] master 2 / maintenance branching
+          * 2020-01-01 00:00:10 +0000 [repo_b] master 1
+          * 2020-01-01 00:00:00 +0000 [repo_a] master 1
+        END
+
+        expect(commit_fingerprints_in(merged_repo_path, 'master')).to contain_exactly(
+          *(commit_fingerprints_in(repo_a_path, 'master') + commit_fingerprints_in(repo_b_path, 'master'))
+        )
+
+        expect(commit_fingerprints_in(merged_repo_path, 'maintenance')).to contain_exactly(
+          *(commit_fingerprints_in(repo_a_path, 'maintenance') + commit_fingerprints_in(repo_b_path, 'maintenance'))
+        )
+      end
     end
   end
 end

@@ -29,6 +29,10 @@ class RepositoryMerger
       tags[new_tag_name]
     end
 
+    def create_or_update_branch(branch_name, commit_id:)
+      rugged_repo.branches.create(branch_name, commit_id, force: true)
+    end
+
     private
 
     def stage_contents_of(original_commit, subdirectory:)
@@ -51,7 +55,7 @@ class RepositoryMerger
       })
 
       if branch_name && !branch_exists
-        rugged_repo.branches.create(branch_name, new_commit_id)
+        create_or_update_branch(branch_name, commit_id: new_commit_id)
       end
 
       lookup(new_commit_id)
