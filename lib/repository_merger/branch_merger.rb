@@ -14,7 +14,7 @@ class RepositoryMerger
     end
 
     def run
-      progressbar.log "Merging `#{branch_name}` branches of #{original_repos.map(&:name).join(', ')} into `#{branch_name_in_merged_repo}` branch of #{merged_repo.path}..."
+      progressbar.log "Merging `#{branch_name}` branches of #{original_branches.map { |original_branch| original_branch.repo.name }.join(', ')} into `#{branch_name_in_merged_repo}` branch of #{merged_repo.path}..."
 
       if original_branches_are_already_imported?
         progressbar.log "  The branches are already imported."
