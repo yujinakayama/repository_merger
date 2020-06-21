@@ -16,9 +16,24 @@ class RepositoryMerger
     def run
       progressbar.log "Merging `#{branch_name}` branches of #{original_repos.map(&:name).join(', ')} into `#{branch_name_in_merged_repo}` branch of #{merged_repo.path}..."
 
+      if original_branches_are_already_imported?
+        progressbar.log "  The branches are already imported."
+        return
+      end
+
       while (original_commit = next_original_commit_to_process!)
         process_commit(original_commit)
       end
+    end
+
+    def original_branches_are_already_imported?
+      commit_ids_in_merged_repo = original_branches.map do |original_branch|
+        commit_map.commit_id_in_merged_repo_for(original_branch.target_commit)
+      end
+
+      return false if commit_ids_in_merged_repo.any?(&:nil?)
+
+      commit_ids_in_merged_repo.include?(current_branch_head_id_in_merged_repo)
     end
 
     def next_original_commit_to_process!
