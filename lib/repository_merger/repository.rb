@@ -18,6 +18,16 @@ class RepositoryMerger
       @rugged_repo ||= Rugged::Repository.new(path)
     end
 
+    def ==(other)
+      path == other.path
+    end
+
+    alias eql? ==
+
+    def hash
+      path.hash
+    end
+
     def name
       File.basename(path)
     end

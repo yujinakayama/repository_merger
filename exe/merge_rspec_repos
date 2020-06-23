@@ -19,15 +19,13 @@ def main
   all_branch_names = repo_merger.original_repos.flat_map { |repo| repo.branches.map(&:name) }.uniq.sort
   target_branch_names = ['origin/master'] + all_branch_names.grep(/\Aorigin\/\d+-\d+-(maintenance|stable)\z/)
 
-  target_branch_names.each do |branch_name|
-    repo_merger.merge_branches(
-      branch_name,
-      commit_message_transformer: proc do |original_commit|
-        scope = "[#{original_commit.repo.name.sub(/\Arspec-/, '')}]"
-        "#{scope} #{original_commit.message}"
-      end
-    )
-  end
+  repo_merger.merge_branches(
+    target_branch_names,
+    commit_message_transformer: proc do |original_commit|
+      scope = "[#{original_commit.repo.name.sub(/\Arspec-/, '')}]"
+      "#{scope} #{original_commit.message}"
+    end
+  )
 
   repo_merger.import_tags(
     tag_name_transformer: proc do |original_tag|

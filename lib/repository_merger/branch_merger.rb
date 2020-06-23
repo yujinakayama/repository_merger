@@ -1,27 +1,29 @@
 # frozen_string_literal: true
 
 require 'ruby-progressbar'
+require_relative 'commit'
 
 class RepositoryMerger
   class BranchMerger
-    attr_reader :repo_merger, :branch_name, :commit_message_transformer, :progressbar
+    attr_reader :repo_merger, :target_branch_name, :all_branch_names, :commit_message_transformer, :progressbar
 
-    def initialize(repo_merger, branch_name:, commit_message_transformer: nil)
+    def initialize(repo_merger, target_branch_name:, all_branch_names:, commit_message_transformer: nil)
       @repo_merger = repo_merger
-      @branch_name = branch_name
+      @target_branch_name = target_branch_name
+      @all_branch_names = all_branch_names
       @commit_message_transformer = commit_message_transformer
       @progressbar = create_progressbar
     end
 
     def run
-      progressbar.log "Merging `#{branch_name}` branches of #{original_branches.map { |original_branch| original_branch.repo.name }.join(', ')} into `#{branch_name_in_merged_repo}` branch of #{merged_repo.path}..."
+      progressbar.log "Merging `#{target_branch_name}` branches of #{original_branches.map { |original_branch| original_branch.repo.name }.join(', ')} into `#{branch_name_in_merged_repo}` branch of #{merged_repo.path}..."
 
       if original_branches_are_already_imported?
         progressbar.log "  The branches are already imported."
         return
       end
 
-      while (original_commit = next_original_commit_to_process!)
+      while (original_commit = unprocessed_original_commit_queue.next)
         process_commit(original_commit)
       end
     end
@@ -34,13 +36,6 @@ class RepositoryMerger
       return false if commit_ids_in_merged_repo.any?(&:nil?)
 
       commit_ids_in_merged_repo.include?(current_branch_head_id_in_merged_repo)
-    end
-
-    def next_original_commit_to_process!
-      queue_having_oldest_next_commit =
-        unprocessed_original_commit_queues.reject(&:empty?).min_by { |queue| queue.first.commit_time }
-
-      queue_having_oldest_next_commit&.shift
     end
 
     def process_commit(original_commit)
@@ -58,7 +53,7 @@ class RepositoryMerger
     end
 
     def update_branch_in_merged_repo_if_needed(original_commit)
-      return unless original_commit.mainline?
+      return unless mainline?(original_commit)
 
       commit_id_in_merged_repo = commit_map.commit_id_in_merged_repo_for(original_commit)
       merged_repo.create_or_update_branch(branch_name_in_merged_repo, commit_id: commit_id_in_merged_repo)
@@ -70,7 +65,7 @@ class RepositoryMerger
           [current_branch_head_id_in_merged_repo].compact
         else
           original_commit.parents.map do |original_parent_commit|
-            if original_commit.mainline? && original_parent_commit.mainline?
+            if mainline?(original_commit) && mainline?(original_parent_commit)
               current_branch_head_id_in_merged_repo
             else
               commit_map.commit_id_in_merged_repo_for(original_parent_commit)
@@ -91,6 +86,11 @@ class RepositoryMerger
       )
     end
 
+    def mainline?(original_commit)
+      original_branch = original_branches_by_repo[original_commit.repo]
+      original_branch.mainline?(original_commit)
+    end
+
     def current_branch_head_id_in_merged_repo
       branch = merged_repo.branch(branch_name_in_merged_repo)
       return nil unless branch
@@ -109,14 +109,22 @@ class RepositoryMerger
       @branch_name_in_merged_repo ||= original_branches.first.local_name
     end
 
-    def unprocessed_original_commit_queues
-      @unprocessed_original_commit_queues ||= original_branches.map do |branch|
-        branch.topologically_ordered_commits_from_root.dup
+    def unprocessed_original_commit_queue
+      @unprocessed_original_commit_queue ||= OriginalCommitQueue.new(
+        repos: original_repos,
+        target_branch_name: target_branch_name,
+        all_branch_names: all_branch_names
+      )
+    end
+
+    def original_branches_by_repo
+      @original_branches_by_repo ||= original_branches.each_with_object({}) do |original_branch, hash|
+        hash[original_branch.repo] = original_branch
       end
     end
 
     def original_branches
-      original_repos.map { |repo| repo.branch(branch_name) }.compact
+      original_repos.map { |repo| repo.branch(target_branch_name) }.compact
     end
 
     def original_repos
@@ -139,9 +147,100 @@ class RepositoryMerger
       ProgressBar.create(
         format: bar_format,
         output: repo_merger.log_output,
-        title: branch_name,
-        total: unprocessed_original_commit_queues.sum { |queue| queue.size }
+        title: target_branch_name,
+        total: unprocessed_original_commit_queue.size
       )
+    end
+
+    class OriginalCommitQueue
+      attr_reader :repos, :target_branch_name, :all_branch_names
+
+      def initialize(repos:, target_branch_name:, all_branch_names:)
+        @repos = repos
+        @target_branch_name = target_branch_name
+        @all_branch_names = all_branch_names
+      end
+
+      def next
+        queue_having_highest_priority_commit = commit_queues.reject(&:empty?).max_by { |queue| queue.first }
+        queue_having_highest_priority_commit&.shift&.commit
+      end
+
+      def size
+        commit_queues.sum(&:size)
+      end
+
+      def commit_queues
+        @commit_queues ||= target_branches.map do |branch|
+          branch.topologically_ordered_commits_from_root.map do |commit|
+            CommitPriority.new(commit, commit_to_branches_map)
+          end
+        end
+      end
+
+      def target_branches
+        repos.map { |repo| repo.branch(target_branch_name) }.compact
+      end
+
+      def commit_to_branches_map
+        @commit_to_branches_map ||= repos.each_with_object({}) do |repo, commit_to_branches_map|
+          commit_to_branches_map.merge!(commit_to_branches_map_in(repo))
+        end.freeze
+      end
+
+      def commit_to_branches_map_in(repo)
+        all_branches_in_repo = repo.branches.select { |branch| all_branch_names.include?(branch.name) }
+
+        all_branches_in_repo.each_with_object({}) do |branch, commit_to_branches_map|
+          branch.topologically_ordered_commits_from_root.each do |commit|
+            commit_to_branches_map[commit] ||= Set.new
+            commit_to_branches_map[commit] << branch
+          end
+        end
+      end
+
+      CommitPriority = Struct.new(:commit, :commit_to_branches_map) do
+        include Comparable
+
+        def <=>(other)
+          branch_comparison = compare_branches(other)
+          return branch_comparison unless branch_comparison.zero?
+          compare_commit_time(other)
+        end
+
+        def compare_branches(other)
+          valid_branch_names = (branch_names + other.branch_names).select do |branch_name|
+            [repo, other.repo].all? { |repo| repo.branch(branch_name) }
+          end.to_set
+
+          self_branch_names = branch_names & valid_branch_names
+          other_branch_names = other.branch_names & valid_branch_names
+
+          if self_branch_names.proper_superset?(other_branch_names)
+            1
+          elsif self_branch_names.proper_subset?(other_branch_names)
+            -1
+          else
+            0
+          end
+        end
+
+        def compare_commit_time(other)
+          (commit.commit_time <=> other.commit.commit_time) * -1
+        end
+
+        def branch_names
+          @branch_names ||= Set.new(branches.map(&:name))
+        end
+
+        def branches
+          commit_to_branches_map[commit]
+        end
+
+        def repo
+          commit.repo
+        end
+      end
     end
   end
 end

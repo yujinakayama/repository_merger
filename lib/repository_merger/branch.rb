@@ -1,14 +1,28 @@
 # frozen_string_literal: true
 
-require_relative 'branch_commit'
+require_relative 'commit'
 
 require 'rugged'
 require 'set'
 
 class RepositoryMerger
   Branch = Struct.new(:rugged_branch, :repo) do
+    def ==(other)
+      repo == other.repo && canonical_name == other.canonical_name
+    end
+
+    alias eql? ==
+
+    def hash
+      repo.hash ^ name.hash
+    end
+
     def name
       rugged_branch.name
+    end
+
+    def canonical_name
+      rugged_branch.canonical_name
     end
 
     def local_name
@@ -22,7 +36,7 @@ class RepositoryMerger
     def target_commit
       @target_commit ||= begin
         rugged_commit = rugged_repo.lookup(rugged_branch.target_id)
-        BranchCommit.new(rugged_commit, self)
+        Commit.new(rugged_commit, repo)
       end
     end
 
@@ -31,7 +45,7 @@ class RepositoryMerger
         walker = Rugged::Walker.new(rugged_repo)
         walker.sorting(Rugged::SORT_TOPO | Rugged::SORT_REVERSE)
         walker.push(rugged_branch.target_id)
-        walker.map { |rugged_commit| BranchCommit.new(rugged_commit, self) }.freeze
+        walker.map { |rugged_commit| Commit.new(rugged_commit, repo) }.freeze
       end
     end
 
