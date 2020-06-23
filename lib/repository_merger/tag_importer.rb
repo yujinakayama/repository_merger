@@ -13,7 +13,7 @@ class RepositoryMerger
     end
 
     def run
-      progressbar.log "Importing tags from #{original_repos.map(&:name).join(', ')} into #{merged_repo.path}..."
+      progressbar.log "Importing tags from #{original_repos.map(&:name).join(', ')} into #{monorepo.path}..."
 
       original_tags.each do |original_tag|
         process_tag(original_tag)
@@ -26,11 +26,11 @@ class RepositoryMerger
       new_tag_name = tag_name_transformer.call(original_tag)
 
       if new_tag_name
-        if merged_repo.tag(new_tag_name)
+        if monorepo.tag(new_tag_name)
           progressbar.log "    The new tag #{new_tag_name.inspect} is already imported. Skipping."
         else
           progressbar.log "    Importing as #{new_tag_name.inspect}."
-          import_tag_into_merged_repo(original_tag, new_tag_name: new_tag_name)
+          import_tag_into_monorepo(original_tag, new_tag_name: new_tag_name)
         end
       else
         progressbar.log "    Not for import. Skipping."
@@ -39,18 +39,18 @@ class RepositoryMerger
       progressbar.increment
     end
 
-    def import_tag_into_merged_repo(original_tag, new_tag_name:)
-      target_commit_id_in_merged_repo = commit_map.commit_id_in_merged_repo_for(original_tag.target_commit)
+    def import_tag_into_monorepo(original_tag, new_tag_name:)
+      target_commit_id_in_monorepo = commit_map.monorepo_commit_id_for(original_tag.target_commit)
 
-      unless target_commit_id_in_merged_repo
+      unless target_commit_id_in_monorepo
         commit_description = "#{original_tag.target_commit.message.chomp.inspect} (#{original_tag.target_commit.id[0, 7]}) in #{original_tag.repo.name}"
         progressbar.log "    The target commit #{commit_description} is not yet imported. Skipping."
         return
       end
 
-      merged_repo.import_tag(
+      monorepo.import_tag(
         original_tag,
-        new_commit_id: target_commit_id_in_merged_repo,
+        new_commit_id: target_commit_id_in_monorepo,
         new_tag_name: new_tag_name
       )
     end
@@ -63,8 +63,8 @@ class RepositoryMerger
       repo_merger.original_repos
     end
 
-    def merged_repo
-      repo_merger.merged_repo
+    def monorepo
+      repo_merger.monorepo
     end
 
     def commit_map

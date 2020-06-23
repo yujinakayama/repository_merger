@@ -16,7 +16,7 @@ class RepositoryMerger
     end
 
     def run
-      progressbar.log "Merging `#{target_branch_name}` branches of #{original_branches.map { |original_branch| original_branch.repo.name }.join(', ')} into `#{branch_name_in_merged_repo}` branch of #{merged_repo.path}..."
+      progressbar.log "Merging `#{target_branch_name}` branches of #{original_branches.map { |original_branch| original_branch.repo.name }.join(', ')} into `#{branch_name_in_monorepo}` branch of #{monorepo.path}..."
 
       if original_branches_are_already_imported?
         progressbar.log "  The branches are already imported."
@@ -29,59 +29,59 @@ class RepositoryMerger
     end
 
     def original_branches_are_already_imported?
-      commit_ids_in_merged_repo = original_branches.map do |original_branch|
-        commit_map.commit_id_in_merged_repo_for(original_branch.target_commit)
+      commit_ids_in_monorepo = original_branches.map do |original_branch|
+        commit_map.monorepo_commit_id_for(original_branch.target_commit)
       end
 
-      return false if commit_ids_in_merged_repo.any?(&:nil?)
+      return false if commit_ids_in_monorepo.any?(&:nil?)
 
-      commit_ids_in_merged_repo.include?(current_branch_head_id_in_merged_repo)
+      commit_ids_in_monorepo.include?(current_branch_head_id_in_monorepo)
     end
 
     def process_commit(original_commit)
       progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
 
-      if commit_map.commit_id_in_merged_repo_for(original_commit)
+      if commit_map.monorepo_commit_id_for(original_commit)
         progressbar.log "    Already imported."
       else
-        import_commit_into_merged_repo(original_commit)
+        import_commit_into_monorepo(original_commit)
       end
 
-      update_branch_in_merged_repo_if_needed(original_commit)
+      update_branch_in_monorepo_if_needed(original_commit)
 
       progressbar.increment
     end
 
-    def update_branch_in_merged_repo_if_needed(original_commit)
+    def update_branch_in_monorepo_if_needed(original_commit)
       return unless mainline?(original_commit)
 
-      commit_id_in_merged_repo = commit_map.commit_id_in_merged_repo_for(original_commit)
-      merged_repo.create_or_update_branch(branch_name_in_merged_repo, commit_id: commit_id_in_merged_repo)
+      monorepo_commit_id = commit_map.monorepo_commit_id_for(original_commit)
+      monorepo.create_or_update_branch(branch_name_in_monorepo, commit_id: monorepo_commit_id)
     end
 
-    def import_commit_into_merged_repo(original_commit)
-      parent_commit_ids_in_merged_repo =
+    def import_commit_into_monorepo(original_commit)
+      parent_commit_ids_in_monorepo =
         if original_commit.root?
-          [current_branch_head_id_in_merged_repo].compact
+          [current_branch_head_id_in_monorepo].compact
         else
           original_commit.parents.map do |original_parent_commit|
             if mainline?(original_commit) && mainline?(original_parent_commit)
-              current_branch_head_id_in_merged_repo
+              current_branch_head_id_in_monorepo
             else
-              commit_map.commit_id_in_merged_repo_for(original_parent_commit)
+              commit_map.monorepo_commit_id_for(original_parent_commit)
             end
           end
         end
 
-      new_commit_in_merged_repo = merged_repo.import_commit(
+      new_commit_in_monorepo = monorepo.import_commit(
         original_commit,
-        new_parent_ids: parent_commit_ids_in_merged_repo,
+        new_parent_ids: parent_commit_ids_in_monorepo,
         subdirectory: original_commit.repo.name,
         message: commit_message_from(original_commit)
       )
 
       commit_map.register(
-        commit_id_in_merged_repo: new_commit_in_merged_repo.id,
+        monorepo_commit_id: new_commit_in_monorepo.id,
         original_commit: original_commit
       )
     end
@@ -91,8 +91,8 @@ class RepositoryMerger
       original_branch.mainline?(original_commit)
     end
 
-    def current_branch_head_id_in_merged_repo
-      branch = merged_repo.branch(branch_name_in_merged_repo)
+    def current_branch_head_id_in_monorepo
+      branch = monorepo.branch(branch_name_in_monorepo)
       return nil unless branch
       branch.target_commit.id
     end
@@ -105,8 +105,8 @@ class RepositoryMerger
       end
     end
 
-    def branch_name_in_merged_repo
-      @branch_name_in_merged_repo ||= original_branches.first.local_name
+    def branch_name_in_monorepo
+      @branch_name_in_monorepo ||= original_branches.first.local_name
     end
 
     def unprocessed_original_commit_queue
@@ -131,8 +131,8 @@ class RepositoryMerger
       repo_merger.original_repos
     end
 
-    def merged_repo
-      repo_merger.merged_repo
+    def monorepo
+      repo_merger.monorepo
     end
 
     def commit_map

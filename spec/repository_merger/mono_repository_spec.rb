@@ -1,13 +1,13 @@
-require 'repository_merger/merged_repository'
+require 'repository_merger/mono_repository'
 require 'fileutils'
 
 class RepositoryMerger
-  RSpec.describe MergedRepository do
+  RSpec.describe MonoRepository do
     include GitHelper
 
-    subject(:merged_repo) do
-      repo_path = git_init('merged_repo')
-      MergedRepository.new(repo_path)
+    subject(:monorepo) do
+      repo_path = git_init('monorepo')
+      MonoRepository.new(repo_path)
     end
 
     let(:original_repo) do
@@ -20,7 +20,7 @@ class RepositoryMerger
       end
 
       it 'creates a new commit with contents of the original commit under the given subdirectory on the branch' do
-        new_root_commit = merged_repo.import_commit(
+        new_root_commit = monorepo.import_commit(
           original_commits[0],
           new_parent_ids: [],
           branch_name: 'some_branch',
@@ -52,14 +52,14 @@ class RepositoryMerger
           +LICENSE
         END
 
-        expect(git_graph(merged_repo.path, 'some_branch', format: '%s')).to eq(<<~END)
+        expect(git_graph(monorepo.path, 'some_branch', format: '%s')).to eq(<<~END)
           * Initial commit to rspec-core.
         END
       end
 
       context 'with a parent id' do
         let!(:new_root_commit) do
-          merged_repo.import_commit(
+          monorepo.import_commit(
             original_commits[0],
             new_parent_ids: [],
             branch_name: 'some_branch',
@@ -68,7 +68,7 @@ class RepositoryMerger
         end
 
         it 'creates a child commit of the parent' do
-          new_second_commit = merged_repo.import_commit(
+          new_second_commit = monorepo.import_commit(
             original_commits[1],
             new_parent_ids: [new_root_commit.id],
             branch_name: 'some_branch',
@@ -96,7 +96,7 @@ class RepositoryMerger
             +(The MIT License)
           END
 
-          expect(git_graph(merged_repo.path, 'some_branch', format: '%s')).to eq(<<~END)
+          expect(git_graph(monorepo.path, 'some_branch', format: '%s')).to eq(<<~END)
             * Version bump to 0.0.0
             * Initial commit to rspec-core.
           END
@@ -123,7 +123,7 @@ class RepositoryMerger
         end
 
         let!(:new_root_commit) do
-          merged_repo.import_commit(
+          monorepo.import_commit(
             original_commits[0],
             new_parent_ids: [],
             branch_name: 'some_branch',
@@ -132,7 +132,7 @@ class RepositoryMerger
         end
 
         it 'creates a commit that properly removes the file' do
-          new_second_commit = merged_repo.import_commit(
+          new_second_commit = monorepo.import_commit(
             original_commits[1],
             new_parent_ids: [new_root_commit.id],
             branch_name: 'some_branch',
@@ -170,15 +170,15 @@ class RepositoryMerger
           end
         end
 
-        let(:new_commit_in_merged_repo) do
-          new_parent_commit = merged_repo.import_commit(
+        let(:new_commit_in_monorepo) do
+          new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
             new_parent_ids: [],
             branch_name: 'master',
             subdirectory: 'rspec-core'
           )
 
-          merged_repo.import_commit(
+          monorepo.import_commit(
             original_commit,
             new_parent_ids: [new_parent_commit.id],
             branch_name: 'master',
@@ -187,9 +187,9 @@ class RepositoryMerger
         end
 
         it 'creates a new tag' do
-          new_tag = merged_repo.import_tag(
+          new_tag = monorepo.import_tag(
             original_tag,
-            new_commit_id: new_commit_in_merged_repo.id,
+            new_commit_id: new_commit_in_monorepo.id,
             new_tag_name: 'v2.0.0.beta.1'
           )
 
@@ -220,15 +220,15 @@ class RepositoryMerger
           end
         end
 
-        let(:new_commit_in_merged_repo) do
-          new_parent_commit = merged_repo.import_commit(
+        let(:new_commit_in_monorepo) do
+          new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
             new_parent_ids: [],
             branch_name: 'master',
             subdirectory: 'rspec-core'
           )
 
-          merged_repo.import_commit(
+          monorepo.import_commit(
             original_commit,
             new_parent_ids: [new_parent_commit.id],
             branch_name: 'master',
@@ -237,9 +237,9 @@ class RepositoryMerger
         end
 
         it 'creates a new tag with the annotation' do
-          new_tag = merged_repo.import_tag(
+          new_tag = monorepo.import_tag(
             original_tag,
-            new_commit_id: new_commit_in_merged_repo.id,
+            new_commit_id: new_commit_in_monorepo.id,
             new_tag_name: 'rspec-core-v3.0.0'
           )
 

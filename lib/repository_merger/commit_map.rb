@@ -18,11 +18,11 @@ class RepositoryMerger
       File.write(path, json)
     end
 
-    def register(commit_id_in_merged_repo:, original_commit:)
-      @map[original_commit_key(original_commit)] = commit_id_in_merged_repo
+    def register(monorepo_commit_id:, original_commit:)
+      @map[original_commit_key(original_commit)] = monorepo_commit_id
     end
 
-    def commit_id_in_merged_repo_for(original_commit)
+    def monorepo_commit_id_for(original_commit)
       @map[original_commit_key(original_commit)]
     end
 

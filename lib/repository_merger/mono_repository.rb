@@ -3,7 +3,7 @@ require_relative 'repository'
 require 'rugged'
 
 class RepositoryMerger
-  class MergedRepository < Repository
+  class MonoRepository < Repository
     def import_commit(original_commit, new_parent_ids:, subdirectory:, message: nil, branch_name: nil)
       stage_contents_of(original_commit, subdirectory: subdirectory)
 
