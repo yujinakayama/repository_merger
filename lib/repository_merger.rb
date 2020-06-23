@@ -2,16 +2,16 @@
 
 require_relative 'repository_merger/branch_merger'
 require_relative 'repository_merger/commit_map'
-require_relative 'repository_merger/merged_repository'
+require_relative 'repository_merger/mono_repository'
 require_relative 'repository_merger/repository'
 require_relative 'repository_merger/tag_importer'
 
 class RepositoryMerger
-  attr_reader :original_repo_paths, :merged_repo_path, :commit_map_file_path, :log_output
+  attr_reader :original_repo_paths, :monorepo_path, :commit_map_file_path, :log_output
 
-  def initialize(original_repo_paths, merged_repo_path:, commit_map_file_path: 'commit_map.json', log_output: $stdout)
+  def initialize(original_repo_paths, monorepo_path:, commit_map_file_path: 'commit_map.json', log_output: $stdout)
     @original_repo_paths = original_repo_paths
-    @merged_repo_path = merged_repo_path
+    @monorepo_path = monorepo_path
     @commit_map_file_path = commit_map_file_path
     @log_output = log_output
   end
@@ -39,8 +39,8 @@ class RepositoryMerger
     @original_repos ||= original_repo_paths.map { |path| Repository.new(path) }
   end
 
-  def merged_repo
-    @merged_repo ||= MergedRepository.new(merged_repo_path)
+  def monorepo
+    @monorepo ||= MonoRepository.new(monorepo_path)
   end
 
   def commit_map
