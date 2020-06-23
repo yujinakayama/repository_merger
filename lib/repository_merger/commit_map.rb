@@ -30,17 +30,18 @@ class RepositoryMerger
     end
 
     def register(monorepo_commit_id:, original_commit:)
-      map[original_commit_key(original_commit)] = monorepo_commit_id
+      key = original_commit_key(original_commit)
+      map[key] ||= []
+      map[key] << monorepo_commit_id
     end
 
-    def monorepo_commit_for(original_commit)
-      commit_id = monorepo_commit_id_for(original_commit)
-      return nil unless commit_id
-      monorepo.lookup(commit_id)
+    def monorepo_commits_for(original_commit)
+      commit_ids = monorepo_commit_ids_for(original_commit)
+      commit_ids.map { |id| monorepo.lookup(id) }
     end
 
-    def monorepo_commit_id_for(original_commit)
-      map[original_commit_key(original_commit)]
+    def monorepo_commit_ids_for(original_commit)
+      map[original_commit_key(original_commit)] || []
     end
 
     def original_commit_key(commit)

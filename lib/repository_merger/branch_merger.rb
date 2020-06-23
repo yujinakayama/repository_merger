@@ -31,19 +31,19 @@ class RepositoryMerger
     def original_branches_are_already_imported?
       return false unless branch_in_monorepo
 
-      branch_head_ids_for_original_branches = original_branches.map do |original_branch|
-        commit_map.monorepo_commit_id_for(original_branch.target_commit)
+      possible_branch_head_id_sets = original_branches.map do |original_branch|
+        commit_map.monorepo_commit_ids_for(original_branch.target_commit)
       end
 
-      return false if branch_head_ids_for_original_branches.any?(&:nil?)
+      return false if possible_branch_head_id_sets.any?(&:empty?)
 
-      branch_head_ids_for_original_branches.include?(branch_in_monorepo.target_commit.id)
+      possible_branch_head_id_sets.flatten.include?(branch_in_monorepo.target_commit.id)
     end
 
     def process_commit(original_commit)
       progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
 
-      if commit_map.monorepo_commit_id_for(original_commit)
+      if commit_map.monorepo_commit_ids_for(original_commit).first
         progressbar.log "    Already imported."
       else
         import_commit_into_monorepo(original_commit)
@@ -57,7 +57,7 @@ class RepositoryMerger
     def update_branch_in_monorepo_if_needed(original_commit)
       return unless mainline?(original_commit)
 
-      monorepo_commit_id = commit_map.monorepo_commit_id_for(original_commit)
+      monorepo_commit_id = commit_map.monorepo_commit_ids_for(original_commit).first
       monorepo.create_or_update_branch(branch_name_in_monorepo, commit_id: monorepo_commit_id)
     end
 
@@ -70,7 +70,7 @@ class RepositoryMerger
             if mainline?(original_commit) && mainline?(original_parent_commit)
               branch_in_monorepo.target_commit
             else
-              commit_map.monorepo_commit_for(original_parent_commit)
+              commit_map.monorepo_commits_for(original_parent_commit).first
             end
           end
         end

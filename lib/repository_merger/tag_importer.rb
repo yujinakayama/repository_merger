@@ -40,7 +40,7 @@ class RepositoryMerger
     end
 
     def import_tag_into_monorepo(original_tag, new_tag_name:)
-      target_commit_id_in_monorepo = commit_map.monorepo_commit_id_for(original_tag.target_commit)
+      target_commit_id_in_monorepo = commit_map.monorepo_commit_ids_for(original_tag.target_commit).first
 
       unless target_commit_id_in_monorepo
         commit_description = "#{original_tag.target_commit.message.chomp.inspect} (#{original_tag.target_commit.id[0, 7]}) in #{original_tag.repo.name}"
