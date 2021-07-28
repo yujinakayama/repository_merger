@@ -16,7 +16,7 @@ class RepositoryMerger
 
     describe '#import_commit' do
       let(:original_commits) do
-        original_repo.branch('origin/master').topologically_ordered_commits_from_root
+        original_repo.branch('origin/main').topologically_ordered_commits_from_root
       end
 
       it 'creates a new commit with contents of the original commit under the given subdirectory on the branch' do
@@ -165,7 +165,7 @@ class RepositoryMerger
         end
 
         let(:original_commit) do
-          original_repo.branch('origin/master').topologically_ordered_commits_from_root.find do |commit|
+          original_repo.branch('origin/main').topologically_ordered_commits_from_root.find do |commit|
             commit.id == 'dd11a4714dc51d78a8ba5fec42adaffc6c92ea39'
           end
         end
@@ -174,14 +174,14 @@ class RepositoryMerger
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
             new_parent_ids: [],
-            branch_name: 'master',
+            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
             new_parent_ids: [new_parent_commit.id],
-            branch_name: 'master',
+            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
         end
@@ -215,7 +215,7 @@ class RepositoryMerger
         end
 
         let(:original_commit) do
-          original_repo.branch('origin/master').topologically_ordered_commits_from_root.find do |commit|
+          original_repo.branch('origin/main').topologically_ordered_commits_from_root.find do |commit|
             commit.id == '91f428f609b37422c08306517e09d2466ab8e516'
           end
         end
@@ -224,14 +224,14 @@ class RepositoryMerger
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
             new_parent_ids: [],
-            branch_name: 'master',
+            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
             new_parent_ids: [new_parent_commit.id],
-            branch_name: 'master',
+            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
         end

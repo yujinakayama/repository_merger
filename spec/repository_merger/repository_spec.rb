@@ -8,7 +8,7 @@ class RepositoryMerger
 
     describe '#branches' do
       it 'returns branches' do
-        expect(repo.branches.map(&:name)).to include('master', 'origin/master')
+        expect(repo.branches.map(&:name)).to include('main', 'origin/main')
       end
     end
   end

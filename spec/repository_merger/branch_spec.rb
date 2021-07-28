@@ -9,21 +9,21 @@ class RepositoryMerger
     describe '#local_name' do
       context 'with a local branch' do
         let(:branch) do
-          repo.branch('master')
+          repo.branch('main')
         end
 
         it 'returns the name' do
-          expect(branch.local_name).to eq('master')
+          expect(branch.local_name).to eq('main')
         end
       end
 
       context 'with a remote-tracking branch' do
         let(:branch) do
-          repo.branch('origin/master')
+          repo.branch('origin/main')
         end
 
         it 'returns a name for suitable for local branch' do
-          expect(branch.local_name).to eq('master')
+          expect(branch.local_name).to eq('main')
         end
       end
     end
