@@ -4,16 +4,16 @@ require 'stringio'
 RSpec.describe RepositoryMerger do
   include GitHelper
 
-  def git_commit(time:, message:)
-    with_git_date(fake_date_for(time)) do
-      git(['commit', '--allow-empty', "--message=#{message}"])
-    end
+  def git_commit(message:)
+    git(['commit', '--allow-empty', "--message=#{message}"])
   end
 
-  def git_merge(branch_name, time: )
-    with_git_date(fake_date_for(time)) do
-      git(['merge', '--no-edit', branch_name])
-    end
+  def git_merge(branch_name)
+    git(['merge', '--no-edit', branch_name])
+  end
+
+  def with_git_time(time, &block)
+    with_git_date(fake_date_for(time), &block)
   end
 
   def fake_date_for(time)
@@ -69,22 +69,22 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:00 +0000 master 1
       let(:repo_a_path) do
         git_init('repo_a') do
-          git_commit(time: '00:00:00', message: 'master 1')
-          git_commit(time: '00:01:00', message: 'master 2')
-          git_commit(time: '00:02:00', message: 'master 3 / feature-a branching')
+          with_git_time('00:00:00') { git_commit(message: 'master 1') }
+          with_git_time('00:01:00') { git_commit(message: 'master 2') }
+          with_git_time('00:02:00') { git_commit(message: 'master 3 / feature-a branching') }
 
           git('checkout -b feature-a')
-          git_commit(time: '00:03:00', message: 'feature-a 1')
+          with_git_time('00:03:00') { git_commit(message: 'feature-a 1') }
 
           git('checkout master')
-          git_commit(time: '00:04:00', message: 'master 4')
+          with_git_time('00:04:00') { git_commit(message: 'master 4') }
 
           git('checkout feature-a')
-          git_commit(time: '00:05:00', message: 'feature-a 2')
+          with_git_time('00:05:00') { git_commit(message: 'feature-a 2') }
 
           git('checkout master')
-          git_merge('feature-a', time: '00:06:00')
-          git_commit(time: '00:07:00', message: 'master 5')
+          with_git_time('00:06:00') { git_merge('feature-a') }
+          with_git_time('00:07:00') { git_commit(message: 'master 5') }
         end
       end
 
@@ -98,20 +98,20 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:10 +0000 master 1
       let(:repo_b_path) do
         git_init('repo_b') do
-          git_commit(time: '00:00:10', message: 'master 1')
-          git_commit(time: '00:01:10', message: 'master 2 / feature-b branching')
+          with_git_time('00:00:10') { git_commit(message: 'master 1') }
+          with_git_time('00:01:10') { git_commit(message: 'master 2 / feature-b branching') }
 
           git('checkout -b feature-b')
 
           git('checkout master')
-          git_commit(time: '00:01:20', message: 'master 3')
+          with_git_time('00:01:20') { git_commit(message: 'master 3') }
 
           git('checkout feature-b')
-          git_commit(time: '00:03:10', message: 'feature-b 1')
+          with_git_time('00:03:10') { git_commit(message: 'feature-b 1') }
 
           git('checkout master')
-          git_merge('feature-b', time: '00:04:10')
-          git_commit(time: '00:07:10', message: 'master 4')
+          with_git_time('00:04:10') { git_merge('feature-b') }
+          with_git_time('00:07:10') { git_commit(message: 'master 4') }
         end
       end
 
@@ -156,16 +156,16 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:00 +0000 master 1
       let(:repo_a_path) do
         git_init('repo_a') do
-          git_commit(time: '00:00:00', message: 'master 1')
-          git_commit(time: '00:01:00', message: 'master 2')
-          git_commit(time: '00:02:00', message: 'master 3 / maintenance branching')
+          with_git_time('00:00:00') { git_commit(message: 'master 1') }
+          with_git_time('00:01:00') { git_commit(message: 'master 2') }
+          with_git_time('00:02:00') { git_commit(message: 'master 3 / maintenance branching') }
 
           git('checkout -b maintenance')
-          git_commit(time: '00:03:00', message: 'maintenance 1')
-          git_commit(time: '00:04:00', message: 'maintenance 2')
+          with_git_time('00:03:00') { git_commit(message: 'maintenance 1') }
+          with_git_time('00:04:00') { git_commit(message: 'maintenance 2') }
 
           git('checkout master')
-          git_commit(time: '00:05:00', message: 'master 4')
+          with_git_time('00:05:00') { git_commit(message: 'master 4') }
         end
       end
 
@@ -178,16 +178,16 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:10 +0000 master 1
       let(:repo_b_path) do
         git_init('repo_b') do
-          git_commit(time: '00:00:10', message: 'master 1')
-          git_commit(time: '00:00:20', message: 'master 2 / maintenance branching')
+          with_git_time('00:00:10') { git_commit(message: 'master 1') }
+          with_git_time('00:00:20') { git_commit(message: 'master 2 / maintenance branching') }
 
           git('checkout -b maintenance')
-          git_commit(time: '00:00:30', message: "maintenance 1 (earlier than repo_a's branching point in date order)")
-          git_commit(time: '00:00:40', message: "maintenance 2 (earlier than repo_a's branching point in date order)")
-          git_commit(time: '00:03:10', message: 'maintenance 3')
+          with_git_time('00:00:30') { git_commit(message: "maintenance 1 (earlier than repo_a's branching point in date order)") }
+          with_git_time('00:00:40') { git_commit(message: "maintenance 2 (earlier than repo_a's branching point in date order)") }
+          with_git_time('00:03:10') { git_commit(message: 'maintenance 3') }
 
           git('checkout master')
-          git_commit(time: '00:04:10', message: 'master 3')
+          with_git_time('00:04:10') { git_commit(message: 'master 3') }
         end
       end
 
@@ -227,14 +227,14 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:00 +0000 master 1
       let(:repo_a_path) do
         git_init('repo_a') do
-          git_commit(time: '00:00:00', message: 'master 1')
-          git_commit(time: '00:01:00', message: 'master 2 / maintenance branching')
+          with_git_time('00:00:00') { git_commit(message: 'master 1') }
+          with_git_time('00:01:00') { git_commit(message: 'master 2 / maintenance branching') }
 
           git('checkout -b maintenance')
-          git_commit(time: '00:02:00', message: 'maintenance 1 / bugfix branching')
+          with_git_time('00:02:00') { git_commit(message: 'maintenance 1 / bugfix branching') }
 
           git('checkout -b bugfix')
-          git_commit(time: '00:03:00', message: 'bugfix 1')
+          with_git_time('00:03:00') { git_commit(message: 'bugfix 1') }
         end
       end
 
@@ -244,14 +244,14 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:10 +0000 master 1
       let(:repo_b_path) do
         git_init('repo_b') do
-          git_commit(time: '00:00:10', message: 'master 1')
-          git_commit(time: '00:00:20', message: 'master 2 / maintenance branching')
+          with_git_time('00:00:10') { git_commit(message: 'master 1') }
+          with_git_time('00:00:20') { git_commit(message: 'master 2 / maintenance branching') }
 
           git('checkout -b maintenance')
-          git_commit(time: '00:00:30', message: 'maintenance 1 / bugfix branching')
+          with_git_time('00:00:30') { git_commit(message: 'maintenance 1 / bugfix branching') }
 
           git('checkout -b bugfix')
-          git_commit(time: '00:00:40', message: 'bugfix 1')
+          with_git_time('00:00:40') { git_commit(message: 'bugfix 1') }
         end
       end
 
@@ -278,12 +278,12 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:00 +0000 master 1
       let(:repo_a_path) do
         git_init('repo_a') do
-          git_commit(time: '00:00:00', message: 'master 1')
-          git_commit(time: '00:01:00', message: 'master 2')
-          git_commit(time: '00:02:00', message: 'master 3 / maintenance branching')
+          with_git_time('00:00:00') { git_commit(message: 'master 1') }
+          with_git_time('00:01:00') { git_commit(message: 'master 2') }
+          with_git_time('00:02:00') { git_commit(message: 'master 3 / maintenance branching') }
 
           git('checkout -b maintenance')
-          git_commit(time: '00:03:00', message: 'maintenance 1')
+          with_git_time('00:03:00') { git_commit(message: 'maintenance 1') }
         end
       end
 
@@ -292,9 +292,9 @@ RSpec.describe RepositoryMerger do
       # * 2020-01-01 00:00:10 +0000 master 1
       let(:repo_b_path) do
         git_init('repo_b') do
-          git_commit(time: '00:00:10', message: 'master 1')
-          git_commit(time: '00:00:20', message: 'master 2')
-          git_commit(time: '00:00:30', message: 'master 3')
+          with_git_time('00:00:10') { git_commit(message: 'master 1') }
+          with_git_time('00:00:20') { git_commit(message: 'master 2') }
+          with_git_time('00:00:30') { git_commit(message: 'master 3') }
         end
       end
 
