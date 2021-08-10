@@ -107,12 +107,12 @@ class RepositoryMerger
         let(:original_repo) do
           repo_path = git_init('original_repo') do
             File.write('some_file.txt', "foo\n")
-            `git add .`
-            `git commit --message='Initial commit'`
+            git('add .')
+            git_commit(message: 'Initial commit')
 
             File.delete('some_file.txt')
-            `git add .`
-            `git commit --message='Remove some_file.txt'`
+            git('add .')
+            git_commit(message: 'Remove some_file.txt')
           end
 
           Repository.new(repo_path)
