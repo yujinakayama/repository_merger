@@ -76,7 +76,8 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
 
         repo_paths.each do |repo_path|
           Dir.chdir(repo_path) do
-            git(['checkout', '--force', branch_name])
+            git("switch --discard-changes #{branch_name}")
+            git('clean --force -d -x')
           end
         end
       end

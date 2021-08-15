@@ -4,12 +4,14 @@ require 'rugged'
 
 class RepositoryMerger
   class MonoRepository < Repository
-    def import_commit(original_commit, new_parent_ids:, subdirectory:, message: nil, branch_name: nil)
+    def import_commit(original_commit, new_parents:, subdirectory:, message: nil, branch_name: nil)
+      new_parents.first&.checkout_contents
+
       stage_contents_of(original_commit, subdirectory: subdirectory)
 
       create_commit_with_metadata_of(
         original_commit,
-        new_parent_ids: new_parent_ids,
+        new_parent_ids: new_parents.map(&:id),
         message: message,
         branch_name: branch_name
       )
@@ -42,8 +44,9 @@ class RepositoryMerger
     private
 
     def stage_contents_of(original_commit, subdirectory:)
-      original_commit.checkout_contents_into(File.join(path, subdirectory))
-      rugged_repo.index.add_all
+      original_commit.extract_contents_into(File.join(path, subdirectory))
+      rugged_repo.index.add_all(subdirectory)
+      rugged_repo.index.write
     end
 
     def create_commit_with_metadata_of(original_commit, new_parent_ids:, message:, branch_name:)

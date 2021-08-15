@@ -22,7 +22,7 @@ class RepositoryMerger
       it 'creates a new commit with contents of the original commit under the given subdirectory on the branch' do
         new_root_commit = monorepo.import_commit(
           original_commits[0],
-          new_parent_ids: [],
+          new_parents: [],
           branch_name: 'some_branch',
           subdirectory: 'rspec-core'
         )
@@ -61,7 +61,7 @@ class RepositoryMerger
         let!(:new_root_commit) do
           monorepo.import_commit(
             original_commits[0],
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'some_branch',
             subdirectory: 'rspec-core'
           )
@@ -70,7 +70,7 @@ class RepositoryMerger
         it 'creates a child commit of the parent' do
           new_second_commit = monorepo.import_commit(
             original_commits[1],
-            new_parent_ids: [new_root_commit.id],
+            new_parents: [new_root_commit],
             branch_name: 'some_branch',
             subdirectory: 'rspec-core'
           )
@@ -125,7 +125,7 @@ class RepositoryMerger
         let!(:new_root_commit) do
           monorepo.import_commit(
             original_commits[0],
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
@@ -134,7 +134,7 @@ class RepositoryMerger
         it 'creates a commit that properly removes the file' do
           new_second_commit = monorepo.import_commit(
             original_commits[1],
-            new_parent_ids: [new_root_commit.id],
+            new_parents: [new_root_commit],
             branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
@@ -156,6 +156,108 @@ class RepositoryMerger
           END
         end
       end
+
+      context 'when importing commits from multiple repositories into each subdirectory' do
+        let(:repo_a) do
+          repo_path = git_init('repo_a') do
+            File.write('branch.txt', "master\n")
+            git('add .')
+            git_commit(message: 'Add branch.txt')
+
+            git('checkout -b feature')
+
+            File.write('branch.txt', "feature\n")
+            git('add .')
+            git_commit(message: 'Modify branch.txt')
+
+            git('checkout master')
+            git('merge --no-edit --no-ff feature')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:repo_b) do
+          repo_path = git_init('repo_b') do
+            File.write('version.txt', "1.0.0\n")
+            git('add .')
+            git_commit(message: 'Version 1.0.0')
+
+            File.write('version.txt', "2.0.0\n")
+            git('add .')
+            git_commit(message: 'Version 2.0.0')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        def files(pattern)
+          file_paths = Dir.glob('**/*').select { |path| File.file?(path) }
+          file_paths.map { |path| [path, File.read(path)] }.to_h
+        end
+
+        before do
+          new_master_root_commit = monorepo.import_commit(
+            repo_a.branch('master').topologically_ordered_commits_from_root[0],
+            new_parents: [],
+            branch_name: 'master',
+            subdirectory: 'repo_a'
+          )
+
+          new_master_second_commit = monorepo.import_commit(
+            repo_b.branch('master').topologically_ordered_commits_from_root[0],
+            new_parents: [new_master_root_commit],
+            branch_name: 'master',
+            subdirectory: 'repo_b'
+          )
+
+          new_feature_commit = monorepo.import_commit(
+            repo_a.branch('feature').topologically_ordered_commits_from_root[1],
+            new_parents: [new_master_second_commit],
+            branch_name: 'feature',
+            subdirectory: 'repo_a'
+          )
+
+          new_master_third_commit = monorepo.import_commit(
+            repo_b.branch('master').topologically_ordered_commits_from_root[1],
+            new_parents: [new_master_second_commit],
+            branch_name: 'master',
+            subdirectory: 'repo_b'
+          )
+
+          monorepo.import_commit(
+            repo_a.branch('master').topologically_ordered_commits_from_root[2],
+            new_parents: [new_master_third_commit, new_feature_commit],
+            branch_name: 'master',
+            subdirectory: 'repo_a'
+          )
+        end
+
+        it 'creates a commit with proper contents even outside of the specified subdirectory' do
+          Dir.chdir(monorepo.path) do
+            git('switch --discard-changes master')
+            git('clean --force -d -x')
+
+            expect(files('**/*')).to eq(
+              'repo_a/branch.txt'  => "feature\n",
+              'repo_b/version.txt' => "2.0.0\n"
+            )
+
+            expect(git(['show', ':/Version 2.0.0'])).to end_with(<<~END)
+
+                  Version 2.0.0
+
+              diff --git a/repo_b/version.txt b/repo_b/version.txt
+              index 3eefcb9..227cea2 100644
+              --- a/repo_b/version.txt
+              +++ b/repo_b/version.txt
+              @@ -1 +1 @@
+              -1.0.0
+              +2.0.0
+            END
+          end
+        end
+      end
     end
 
     describe '#import_tag' do
@@ -173,14 +275,14 @@ class RepositoryMerger
         let(:new_commit_in_monorepo) do
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
-            new_parent_ids: [new_parent_commit.id],
+            new_parents: [new_parent_commit],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )
@@ -223,14 +325,14 @@ class RepositoryMerger
         let(:new_commit_in_monorepo) do
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
-            new_parent_ids: [new_parent_commit.id],
+            new_parents: [new_parent_commit],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )

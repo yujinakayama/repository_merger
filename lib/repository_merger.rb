@@ -47,9 +47,9 @@ class RepositoryMerger
     @commit_map ||= begin
       commit_map =
         if commit_map_file_path && File.exist?(commit_map_file_path)
-          CommitMap.load_from(commit_map_file_path)
+          CommitMap.load_from(commit_map_file_path, monorepo: monorepo)
         else
-          CommitMap.new
+          CommitMap.new(monorepo: monorepo)
         end
 
       if commit_map_file_path
