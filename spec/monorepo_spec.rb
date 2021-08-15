@@ -1,5 +1,13 @@
-RSpec.describe 'monorepo', if: Dir.exist?('monorepo') do
+destination_directory = "dest/#{`git rev-parse --abbrev-ref HEAD`.chomp}"
+
+RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}/monorepo") do
   include GitHelper
+
+  around do |example|
+    Dir.chdir(destination_directory) do
+      example.run
+    end
+  end
 
   %w[
     main
