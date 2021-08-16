@@ -9,12 +9,17 @@ class RepositoryMerger
 
       stage_contents_of(original_commit, subdirectory: subdirectory)
 
-      create_commit_with_metadata_of(
+      new_commit = create_commit_with_metadata_of(
         original_commit,
         new_parent_ids: new_parents.map(&:id),
-        message: message,
-        branch_name: branch_name
+        message: message
       )
+
+      if branch_name
+        create_or_update_branch(branch_name, commit_id: new_commit.id)
+      end
+
+      new_commit
     end
 
     def import_tag(original_tag, new_commit_id:, new_tag_name:)
@@ -57,7 +62,7 @@ class RepositoryMerger
       rugged_repo.index.write
     end
 
-    def create_commit_with_metadata_of(original_commit, new_parent_ids:, message:, branch_name:)
+    def create_commit_with_metadata_of(original_commit, new_parent_ids:, message:)
       original_rugged_commit = original_commit.rugged_commit
 
       new_commit_id = Rugged::Commit.create(rugged_repo, {
@@ -67,10 +72,6 @@ class RepositoryMerger
         tree: rugged_repo.index.write_tree,
         parents: new_parent_ids,
       })
-
-      if branch_name
-        create_or_update_branch(branch_name, commit_id: new_commit_id)
-      end
 
       @current_checked_out_commit_id = new_commit_id
 
