@@ -5,7 +5,7 @@ require 'rugged'
 class RepositoryMerger
   class MonoRepository < Repository
     def import_commit(original_commit, new_parents:, subdirectory:, message: nil, branch_name: nil)
-      new_parents.first&.checkout_contents
+      checkout_contents_if_needed(new_parents.first) unless new_parents.empty?
 
       stage_contents_of(original_commit, subdirectory: subdirectory)
 
@@ -43,6 +43,14 @@ class RepositoryMerger
 
     private
 
+    attr_accessor :current_checked_out_commit_id
+
+    def checkout_contents_if_needed(commit)
+      return if commit.id == current_checked_out_commit_id
+      commit.checkout_contents
+      @current_checked_out_commit_id = commit.id
+    end
+
     def stage_contents_of(original_commit, subdirectory:)
       original_commit.extract_contents_into(File.join(path, subdirectory))
       rugged_repo.index.add_all(subdirectory)
@@ -63,6 +71,8 @@ class RepositoryMerger
       if branch_name
         create_or_update_branch(branch_name, commit_id: new_commit_id)
       end
+
+      @current_checked_out_commit_id = new_commit_id
 
       lookup(new_commit_id)
     end
