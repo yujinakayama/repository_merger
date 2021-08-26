@@ -157,6 +157,53 @@ class RepositoryMerger
         end
       end
 
+      context 'when the commit capitalizes a filename' do
+        let(:original_repo) do
+          repo_path = git_init('original_repo') do
+            File.write('some_file.txt', "foo\n")
+            git('add .')
+            git_commit(message: 'Initial commit')
+
+            git('mv some_file.txt SOME_FILE.txt')
+            git_commit(message: 'Rename some_file.txt as SOME_FILE.txt')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:original_commits) do
+          original_repo.branch('master').topologically_ordered_commits_from_root
+        end
+
+        let!(:new_root_commit) do
+          monorepo.import_commit(
+            original_commits[0],
+            new_parents: [],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+        end
+
+        it 'creates a commit that properly capitalizes the filename' do
+          new_second_commit = monorepo.import_commit(
+            original_commits[1],
+            new_parents: [new_root_commit],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+
+          expect(git_show(new_second_commit)).to end_with(<<~END)
+
+                Rename some_file.txt as SOME_FILE.txt
+
+            diff --git PATH:subdirectory/some_file.txt PATH:subdirectory/SOME_FILE.txt
+            similarity index 100%
+            rename from subdirectory/some_file.txt
+            rename to subdirectory/SOME_FILE.txt
+          END
+        end
+      end
+
       context 'when importing commits from multiple repositories into each subdirectory' do
         let(:repo_a) do
           repo_path = git_init('repo_a') do

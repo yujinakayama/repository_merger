@@ -4,6 +4,11 @@ require 'rugged'
 
 class RepositoryMerger
   class MonoRepository < Repository
+    def initialize(_path)
+      super
+      configure
+    end
+
     def import_commit(original_commit, new_parents:, subdirectory:, message: nil, branch_name: nil)
       checkout_contents_if_needed(new_parents.first) unless new_parents.empty?
 
@@ -47,6 +52,10 @@ class RepositoryMerger
     end
 
     private
+
+    def configure
+      rugged_repo.config['core.ignorecase'] = false
+    end
 
     attr_accessor :current_checked_out_commit_id
 
