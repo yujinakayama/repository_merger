@@ -204,6 +204,68 @@ class RepositoryMerger
         end
       end
 
+      context 'when the commit untracks an ignored file' do
+        let(:original_repo) do
+          repo_path = git_init('original_repo') do
+            File.write('some_file.txt', "foo\n")
+            git('add .')
+            git_commit(message: 'Initial commit')
+
+            File.write('.gitignore', "*.txt\n")
+            git('rm --cached some_file.txt')
+            git('add .')
+            git_commit(message: 'Ignore text files')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:original_commits) do
+          original_repo.branch('master').topologically_ordered_commits_from_root
+        end
+
+        let!(:new_root_commit) do
+          monorepo.import_commit(
+            original_commits[0],
+            new_parents: [],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+        end
+
+        it 'creates a commit that properly untracks the file' do
+          new_second_commit = monorepo.import_commit(
+            original_commits[1],
+            new_parents: [new_root_commit],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+
+          expect(git_show(new_second_commit).sub(/\Acommit \h+/, ''))
+            .to eq(git_show(original_commits[1]).sub(/\Acommit \h+/, '').gsub('PATH:', 'PATH:subdirectory/'))
+
+          expect(git_show(new_second_commit)).to end_with(<<~END)
+
+                Ignore text files
+
+            diff --git PATH:subdirectory/.gitignore PATH:subdirectory/.gitignore
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..2211df63dd2831aa0cfc38ba1ebc95e3c4620894
+            --- /dev/null
+            +++ PATH:subdirectory/.gitignore
+            @@ -0,0 +1 @@
+            +*.txt
+            diff --git PATH:subdirectory/some_file.txt PATH:subdirectory/some_file.txt
+            deleted file mode 100644
+            index 257cc5642cb1a054f08cc83f2d943e56fd3ebe99..0000000000000000000000000000000000000000
+            --- PATH:subdirectory/some_file.txt
+            +++ /dev/null
+            @@ -1 +0,0 @@
+            -foo
+          END
+        end
+      end
+
       context 'when importing commits from multiple repositories into each subdirectory' do
         let(:repo_a) do
           repo_path = git_init('repo_a') do

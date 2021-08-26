@@ -51,7 +51,7 @@ class RepositoryMerger
       repo.rugged_repo.checkout_tree(
         id,
         baseline: empty_tree,
-        strategy: [:dont_update_index, :force, :remove_untracked],
+        strategy: [:dont_update_index, :force, :remove_ignored, :remove_untracked],
         target_directory: directory_path
       )
     end
