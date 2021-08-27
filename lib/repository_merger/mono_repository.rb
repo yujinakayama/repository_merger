@@ -67,7 +67,20 @@ class RepositoryMerger
 
     def stage_contents_of(original_commit, subdirectory:)
       original_commit.extract_contents_into(File.join(path, subdirectory))
+
+      # First, track (almost) all files (including removed files) with .gitignore rules
       rugged_repo.index.add_all(subdirectory)
+
+      # Then specify all the file paths explicily to track files
+      # that matches .gitignore but is tracked in the original commit.
+      # We cannot use Rugged::Index#add_all with :force option
+      # since it has a bug where it raises strange error when adding files in a ignored directory.
+      # https://github.com/libgit2/libgit2/issues/4377
+      original_commit.files.each do |original_file_path|
+        monorepo_file_path = File.join(subdirectory, original_file_path)
+        rugged_repo.index.add(monorepo_file_path)
+      end
+
       rugged_repo.index.write
     end
 

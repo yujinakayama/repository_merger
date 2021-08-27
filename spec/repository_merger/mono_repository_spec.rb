@@ -266,6 +266,76 @@ class RepositoryMerger
         end
       end
 
+      context 'when the commit adds a file that should normally be ignored by .gitignore' do
+        let(:original_repo) do
+          repo_path = git_init('original_repo') do
+            File.write('.gitignore', <<~END)
+              *.txt
+              tmp
+            END
+
+            File.write('some_text.txt', "foo\n")
+
+            Dir.mkdir('tmp')
+            File.write('tmp/some_ruby.rb', "bar\n")
+
+            git('add --force .')
+            git_commit(message: 'Add some_file.txt that should be ignored normally')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:original_commit) do
+          original_repo.branch('master').topologically_ordered_commits_from_root.first
+        end
+
+        before do
+          expect(git_show(original_commit)).to include('some_text.txt')
+                                          .and include('some_ruby.rb')
+        end
+
+        it 'creates a commit that properly tracks the file' do
+          new_commit = monorepo.import_commit(
+            original_commit,
+            new_parents: [],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+
+          expect(git_show(new_commit).sub(/\Acommit \h+/, ''))
+            .to eq(git_show(original_commit).sub(/\Acommit \h+/, '').gsub('PATH:', 'PATH:subdirectory/'))
+
+          expect(git_show(new_commit)).to end_with(<<~END)
+
+                Add some_file.txt that should be ignored normally
+
+            diff --git PATH:subdirectory/.gitignore PATH:subdirectory/.gitignore
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..a7efa45bf9cf969177ba4dd80d47ed0030e80da8
+            --- /dev/null
+            +++ PATH:subdirectory/.gitignore
+            @@ -0,0 +1,2 @@
+            +*.txt
+            +tmp
+            diff --git PATH:subdirectory/some_text.txt PATH:subdirectory/some_text.txt
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..257cc5642cb1a054f08cc83f2d943e56fd3ebe99
+            --- /dev/null
+            +++ PATH:subdirectory/some_text.txt
+            @@ -0,0 +1 @@
+            +foo
+            diff --git PATH:subdirectory/tmp/some_ruby.rb PATH:subdirectory/tmp/some_ruby.rb
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..5716ca5987cbf97d6bb54920bea6adde242d87e6
+            --- /dev/null
+            +++ PATH:subdirectory/tmp/some_ruby.rb
+            @@ -0,0 +1 @@
+            +bar
+          END
+        end
+      end
+
       context 'when importing commits from multiple repositories into each subdirectory' do
         let(:repo_a) do
           repo_path = git_init('repo_a') do

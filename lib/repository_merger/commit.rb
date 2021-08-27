@@ -38,6 +38,13 @@ class RepositoryMerger
       end
     end
 
+    def files
+      @files ||= begin
+        blob_entries = rugged_commit.tree.walk(:postorder).select { |_, entry| entry[:type] == :blob }
+        blob_entries.map { |directory, entry| "#{directory}#{entry[:name]}" }
+      end
+    end
+
     def checkout_contents
       repo.rugged_repo.checkout_tree(id, strategy: :force)
     end
