@@ -1,6 +1,10 @@
+require 'digest'
+require 'find'
+
 destination_directory = "dest/#{`git rev-parse --abbrev-ref HEAD`.chomp}"
 
 RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}/monorepo") do
+  include FileHelper
   include GitHelper
 
   around do |example|
@@ -62,12 +66,6 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
         raise if fingerprints.empty?
 
         fingerprints
-      end
-
-      def list_of_files_with_digest(dir_path)
-        Dir.chdir(dir_path) do
-          `find . -type f -and -not -path '*/.git/*' -exec md5sum {} \\;`
-        end
       end
 
       before do
