@@ -38,8 +38,29 @@ class RepositoryMerger
       end
     end
 
-    def checkout_contents_into(directory_path)
-      repo.rugged_repo.checkout_tree(id, strategy: :force, target_directory: directory_path)
+    def files
+      @files ||= begin
+        blob_entries = rugged_commit.tree.walk(:postorder).select { |_, entry| entry[:type] == :blob }
+        blob_entries.map { |directory, entry| "#{directory}#{entry[:name]}" }
+      end
+    end
+
+    def checkout_contents
+      repo.rugged_repo.checkout_tree(id, strategy: :force)
+    end
+
+    def extract_contents_into(directory_path)
+      # We need to specify an empty tree as a baseline tree
+      # to prevent libgit2 from skipping checkout of some contents
+      # by comparing the commit tree with the HEAD tree.
+      empty_tree = Rugged::Tree.empty(repo.rugged_repo)
+
+      repo.rugged_repo.checkout_tree(
+        id,
+        baseline: empty_tree,
+        strategy: [:dont_update_index, :force, :remove_ignored, :remove_untracked],
+        target_directory: directory_path
+      )
     end
 
     def revision_id

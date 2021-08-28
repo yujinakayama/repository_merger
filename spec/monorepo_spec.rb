@@ -76,7 +76,8 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
 
         repo_paths.each do |repo_path|
           Dir.chdir(repo_path) do
-            git(['checkout', '--force', branch_name])
+            git("switch --discard-changes #{branch_name}")
+            git('clean --force -d -x')
           end
         end
       end
@@ -86,7 +87,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
           .to eq(commit_fingerprints_in_original_repos.sort.join("\n"))
       end
 
-      pending 'has same contents as the original commits' do
+      it 'has same contents as the original branch' do
         expect(list_of_files_with_digest('monorepo')).to eq(list_of_files_with_digest('original_repos'))
       end
     end

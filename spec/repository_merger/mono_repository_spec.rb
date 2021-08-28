@@ -22,7 +22,7 @@ class RepositoryMerger
       it 'creates a new commit with contents of the original commit under the given subdirectory on the branch' do
         new_root_commit = monorepo.import_commit(
           original_commits[0],
-          new_parent_ids: [],
+          new_parents: [],
           branch_name: 'some_branch',
           subdirectory: 'rspec-core'
         )
@@ -61,7 +61,7 @@ class RepositoryMerger
         let!(:new_root_commit) do
           monorepo.import_commit(
             original_commits[0],
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'some_branch',
             subdirectory: 'rspec-core'
           )
@@ -70,7 +70,7 @@ class RepositoryMerger
         it 'creates a child commit of the parent' do
           new_second_commit = monorepo.import_commit(
             original_commits[1],
-            new_parent_ids: [new_root_commit.id],
+            new_parents: [new_root_commit],
             branch_name: 'some_branch',
             subdirectory: 'rspec-core'
           )
@@ -107,12 +107,12 @@ class RepositoryMerger
         let(:original_repo) do
           repo_path = git_init('original_repo') do
             File.write('some_file.txt', "foo\n")
-            `git add .`
-            `git commit --message='Initial commit'`
+            git('add .')
+            git_commit(message: 'Initial commit')
 
             File.delete('some_file.txt')
-            `git add .`
-            `git commit --message='Remove some_file.txt'`
+            git('add .')
+            git_commit(message: 'Remove some_file.txt')
           end
 
           Repository.new(repo_path)
@@ -125,7 +125,7 @@ class RepositoryMerger
         let!(:new_root_commit) do
           monorepo.import_commit(
             original_commits[0],
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
@@ -134,7 +134,7 @@ class RepositoryMerger
         it 'creates a commit that properly removes the file' do
           new_second_commit = monorepo.import_commit(
             original_commits[1],
-            new_parent_ids: [new_root_commit.id],
+            new_parents: [new_root_commit],
             branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
@@ -156,6 +156,287 @@ class RepositoryMerger
           END
         end
       end
+
+      context 'when the commit capitalizes a filename' do
+        let(:original_repo) do
+          repo_path = git_init('original_repo') do
+            File.write('some_file.txt', "foo\n")
+            git('add .')
+            git_commit(message: 'Initial commit')
+
+            git('mv some_file.txt SOME_FILE.txt')
+            git_commit(message: 'Rename some_file.txt as SOME_FILE.txt')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:original_commits) do
+          original_repo.branch('master').topologically_ordered_commits_from_root
+        end
+
+        let!(:new_root_commit) do
+          monorepo.import_commit(
+            original_commits[0],
+            new_parents: [],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+        end
+
+        it 'creates a commit that properly capitalizes the filename' do
+          new_second_commit = monorepo.import_commit(
+            original_commits[1],
+            new_parents: [new_root_commit],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+
+          expect(git_show(new_second_commit)).to end_with(<<~END)
+
+                Rename some_file.txt as SOME_FILE.txt
+
+            diff --git PATH:subdirectory/some_file.txt PATH:subdirectory/SOME_FILE.txt
+            similarity index 100%
+            rename from subdirectory/some_file.txt
+            rename to subdirectory/SOME_FILE.txt
+          END
+        end
+      end
+
+      context 'when the commit untracks an ignored file' do
+        let(:original_repo) do
+          repo_path = git_init('original_repo') do
+            File.write('some_file.txt', "foo\n")
+            git('add .')
+            git_commit(message: 'Initial commit')
+
+            File.write('.gitignore', "*.txt\n")
+            git('rm --cached some_file.txt')
+            git('add .')
+            git_commit(message: 'Ignore text files')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:original_commits) do
+          original_repo.branch('master').topologically_ordered_commits_from_root
+        end
+
+        let!(:new_root_commit) do
+          monorepo.import_commit(
+            original_commits[0],
+            new_parents: [],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+        end
+
+        it 'creates a commit that properly untracks the file' do
+          new_second_commit = monorepo.import_commit(
+            original_commits[1],
+            new_parents: [new_root_commit],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+
+          expect(git_show(new_second_commit).sub(/\Acommit \h+/, ''))
+            .to eq(git_show(original_commits[1]).sub(/\Acommit \h+/, '').gsub('PATH:', 'PATH:subdirectory/'))
+
+          expect(git_show(new_second_commit)).to end_with(<<~END)
+
+                Ignore text files
+
+            diff --git PATH:subdirectory/.gitignore PATH:subdirectory/.gitignore
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..2211df63dd2831aa0cfc38ba1ebc95e3c4620894
+            --- /dev/null
+            +++ PATH:subdirectory/.gitignore
+            @@ -0,0 +1 @@
+            +*.txt
+            diff --git PATH:subdirectory/some_file.txt PATH:subdirectory/some_file.txt
+            deleted file mode 100644
+            index 257cc5642cb1a054f08cc83f2d943e56fd3ebe99..0000000000000000000000000000000000000000
+            --- PATH:subdirectory/some_file.txt
+            +++ /dev/null
+            @@ -1 +0,0 @@
+            -foo
+          END
+        end
+      end
+
+      context 'when the commit adds a file that should normally be ignored by .gitignore' do
+        let(:original_repo) do
+          repo_path = git_init('original_repo') do
+            File.write('.gitignore', <<~END)
+              *.txt
+              tmp
+            END
+
+            File.write('some_text.txt', "foo\n")
+
+            Dir.mkdir('tmp')
+            File.write('tmp/some_ruby.rb', "bar\n")
+
+            git('add --force .')
+            git_commit(message: 'Add some_file.txt that should be ignored normally')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:original_commit) do
+          original_repo.branch('master').topologically_ordered_commits_from_root.first
+        end
+
+        before do
+          expect(git_show(original_commit)).to include('some_text.txt')
+                                          .and include('some_ruby.rb')
+        end
+
+        it 'creates a commit that properly tracks the file' do
+          new_commit = monorepo.import_commit(
+            original_commit,
+            new_parents: [],
+            branch_name: 'some_branch',
+            subdirectory: 'subdirectory'
+          )
+
+          expect(git_show(new_commit).sub(/\Acommit \h+/, ''))
+            .to eq(git_show(original_commit).sub(/\Acommit \h+/, '').gsub('PATH:', 'PATH:subdirectory/'))
+
+          expect(git_show(new_commit)).to end_with(<<~END)
+
+                Add some_file.txt that should be ignored normally
+
+            diff --git PATH:subdirectory/.gitignore PATH:subdirectory/.gitignore
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..a7efa45bf9cf969177ba4dd80d47ed0030e80da8
+            --- /dev/null
+            +++ PATH:subdirectory/.gitignore
+            @@ -0,0 +1,2 @@
+            +*.txt
+            +tmp
+            diff --git PATH:subdirectory/some_text.txt PATH:subdirectory/some_text.txt
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..257cc5642cb1a054f08cc83f2d943e56fd3ebe99
+            --- /dev/null
+            +++ PATH:subdirectory/some_text.txt
+            @@ -0,0 +1 @@
+            +foo
+            diff --git PATH:subdirectory/tmp/some_ruby.rb PATH:subdirectory/tmp/some_ruby.rb
+            new file mode 100644
+            index 0000000000000000000000000000000000000000..5716ca5987cbf97d6bb54920bea6adde242d87e6
+            --- /dev/null
+            +++ PATH:subdirectory/tmp/some_ruby.rb
+            @@ -0,0 +1 @@
+            +bar
+          END
+        end
+      end
+
+      context 'when importing commits from multiple repositories into each subdirectory' do
+        let(:repo_a) do
+          repo_path = git_init('repo_a') do
+            File.write('branch.txt', "master\n")
+            git('add .')
+            git_commit(message: 'Add branch.txt')
+
+            git('checkout -b feature')
+
+            File.write('branch.txt', "feature\n")
+            git('add .')
+            git_commit(message: 'Modify branch.txt')
+
+            git('checkout master')
+            git('merge --no-edit --no-ff feature')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        let(:repo_b) do
+          repo_path = git_init('repo_b') do
+            File.write('version.txt', "1.0.0\n")
+            git('add .')
+            git_commit(message: 'Version 1.0.0')
+
+            File.write('version.txt', "2.0.0\n")
+            git('add .')
+            git_commit(message: 'Version 2.0.0')
+          end
+
+          Repository.new(repo_path)
+        end
+
+        def files(pattern)
+          file_paths = Dir.glob('**/*').select { |path| File.file?(path) }
+          file_paths.map { |path| [path, File.read(path)] }.to_h
+        end
+
+        before do
+          new_master_root_commit = monorepo.import_commit(
+            repo_a.branch('master').topologically_ordered_commits_from_root[0],
+            new_parents: [],
+            branch_name: 'master',
+            subdirectory: 'repo_a'
+          )
+
+          new_master_second_commit = monorepo.import_commit(
+            repo_b.branch('master').topologically_ordered_commits_from_root[0],
+            new_parents: [new_master_root_commit],
+            branch_name: 'master',
+            subdirectory: 'repo_b'
+          )
+
+          new_feature_commit = monorepo.import_commit(
+            repo_a.branch('feature').topologically_ordered_commits_from_root[1],
+            new_parents: [new_master_second_commit],
+            branch_name: 'feature',
+            subdirectory: 'repo_a'
+          )
+
+          new_master_third_commit = monorepo.import_commit(
+            repo_b.branch('master').topologically_ordered_commits_from_root[1],
+            new_parents: [new_master_second_commit],
+            branch_name: 'master',
+            subdirectory: 'repo_b'
+          )
+
+          monorepo.import_commit(
+            repo_a.branch('master').topologically_ordered_commits_from_root[2],
+            new_parents: [new_master_third_commit, new_feature_commit],
+            branch_name: 'master',
+            subdirectory: 'repo_a'
+          )
+        end
+
+        it 'creates a commit with proper contents even outside of the specified subdirectory' do
+          Dir.chdir(monorepo.path) do
+            git('switch --discard-changes master')
+            git('clean --force -d -x')
+
+            expect(files('**/*')).to eq(
+              'repo_a/branch.txt'  => "feature\n",
+              'repo_b/version.txt' => "2.0.0\n"
+            )
+
+            expect(git(['show', ':/Version 2.0.0'])).to end_with(<<~END)
+
+                  Version 2.0.0
+
+              diff --git a/repo_b/version.txt b/repo_b/version.txt
+              index 3eefcb9..227cea2 100644
+              --- a/repo_b/version.txt
+              +++ b/repo_b/version.txt
+              @@ -1 +1 @@
+              -1.0.0
+              +2.0.0
+            END
+          end
+        end
+      end
     end
 
     describe '#import_tag' do
@@ -173,14 +454,14 @@ class RepositoryMerger
         let(:new_commit_in_monorepo) do
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
-            new_parent_ids: [new_parent_commit.id],
+            new_parents: [new_parent_commit],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )
@@ -223,14 +504,14 @@ class RepositoryMerger
         let(:new_commit_in_monorepo) do
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
-            new_parent_ids: [],
+            new_parents: [],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
-            new_parent_ids: [new_parent_commit.id],
+            new_parents: [new_parent_commit],
             branch_name: 'main',
             subdirectory: 'rspec-core'
           )

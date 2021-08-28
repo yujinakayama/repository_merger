@@ -29,13 +29,15 @@ class RepositoryMerger
     end
 
     def original_branches_are_already_imported?
-      commit_ids_in_monorepo = original_branches.map do |original_branch|
+      return false unless branch_in_monorepo
+
+      branch_head_ids_for_original_branches = original_branches.map do |original_branch|
         commit_map.monorepo_commit_id_for(original_branch.target_commit)
       end
 
-      return false if commit_ids_in_monorepo.any?(&:nil?)
+      return false if branch_head_ids_for_original_branches.any?(&:nil?)
 
-      commit_ids_in_monorepo.include?(current_branch_head_id_in_monorepo)
+      branch_head_ids_for_original_branches.include?(branch_in_monorepo.target_commit.id)
     end
 
     def process_commit(original_commit)
@@ -60,22 +62,22 @@ class RepositoryMerger
     end
 
     def import_commit_into_monorepo(original_commit)
-      parent_commit_ids_in_monorepo =
+      parent_commits_in_monorepo =
         if original_commit.root?
-          [current_branch_head_id_in_monorepo].compact
+          [branch_in_monorepo&.target_commit].compact
         else
           original_commit.parents.map do |original_parent_commit|
             if mainline?(original_commit) && mainline?(original_parent_commit)
-              current_branch_head_id_in_monorepo
+              branch_in_monorepo.target_commit
             else
-              commit_map.monorepo_commit_id_for(original_parent_commit)
+              commit_map.monorepo_commit_for(original_parent_commit)
             end
           end
         end
 
       new_commit_in_monorepo = monorepo.import_commit(
         original_commit,
-        new_parent_ids: parent_commit_ids_in_monorepo,
+        new_parents: parent_commits_in_monorepo,
         subdirectory: original_commit.repo.name,
         message: commit_message_from(original_commit)
       )
@@ -91,18 +93,16 @@ class RepositoryMerger
       original_branch.mainline?(original_commit)
     end
 
-    def current_branch_head_id_in_monorepo
-      branch = monorepo.branch(branch_name_in_monorepo)
-      return nil unless branch
-      branch.target_commit.id
-    end
-
     def commit_message_from(original_commit)
       if commit_message_transformer
         commit_message_transformer.call(original_commit)
       else
         original_commit.message
       end
+    end
+
+    def branch_in_monorepo
+      monorepo.branch(branch_name_in_monorepo)
     end
 
     def branch_name_in_monorepo

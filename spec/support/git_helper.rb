@@ -7,6 +7,22 @@ module GitHelper
 
   module_function
 
+  def git_commit(message:)
+    git(['commit', '--allow-empty', "--message=#{message}"])
+  end
+
+  def git_merge(branch_name)
+    git(['merge', '--no-edit', branch_name])
+  end
+
+  def git_tag(name, message: nil)
+    if message
+      git(['tag', '--annotate', name, '--message', message])
+    else
+      git(['tag', name])
+    end
+  end
+
   def git_show(*args, path_prefix: 'PATH:')
     if args.first.respond_to?(:repo) && args.first.respond_to?(:revision_id)
       revision = args.first

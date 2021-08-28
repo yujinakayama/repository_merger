@@ -4,24 +4,8 @@ require 'stringio'
 RSpec.describe RepositoryMerger do
   include GitHelper
 
-  def git_commit(message:)
-    git(['commit', '--allow-empty', "--message=#{message}"])
-  end
-
-  def git_merge(branch_name)
-    git(['merge', '--no-edit', branch_name])
-  end
-
   def with_git_time(time, &block)
     with_git_date(fake_date_for(time), &block)
-  end
-
-  def git_tag(name, message: nil)
-    if message
-      git(['tag', '--annotate', name, '--message', message])
-    else
-      git(['tag', name])
-    end
   end
 
   def fake_date_for(time)
