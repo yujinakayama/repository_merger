@@ -68,8 +68,16 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
         fingerprints
       end
 
+      let(:original_repo_names) do
+        if branch_name.start_with?('2')
+          %w[rspec rspec-core rspec-expectations rspec-mocks]
+        else
+          %w[rspec rspec-core rspec-expectations rspec-mocks rspec-support]
+        end
+      end
+
       before do
-        repo_paths = %w[rspec rspec-core rspec-expectations rspec-mocks rspec-support].map { |name| "original_repos/#{name}" }
+        repo_paths = original_repo_names.map { |name| "original_repos/#{name}" }
         repo_paths << 'monorepo'
 
         repo_paths.each do |repo_path|
@@ -86,7 +94,8 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
       end
 
       it 'has same contents as the original branch' do
-        expect(list_of_files_with_digest('monorepo')).to eq(list_of_files_with_digest('original_repos'))
+        expect(list_of_files_with_digest('monorepo'))
+          .to eq(list_of_files_with_digest('original_repos', only: original_repo_names))
       end
     end
   end
