@@ -5,10 +5,10 @@ require_relative 'commit'
 
 class RepositoryMerger
   class BranchMerger
-    attr_reader :repo_merger, :target_branch_name, :all_branch_names, :commit_message_transformer, :progressbar
+    attr_reader :configuration, :target_branch_name, :all_branch_names, :commit_message_transformer, :progressbar
 
-    def initialize(repo_merger, target_branch_name:, all_branch_names:, commit_message_transformer: nil, progressbar_title: nil)
-      @repo_merger = repo_merger
+    def initialize(configuration:, target_branch_name:, all_branch_names:, commit_message_transformer: nil, progressbar_title: nil)
+      @configuration = configuration
       @target_branch_name = target_branch_name
       @all_branch_names = all_branch_names
       @commit_message_transformer = commit_message_transformer
@@ -128,15 +128,15 @@ class RepositoryMerger
     end
 
     def original_repos
-      repo_merger.original_repos
+      configuration.original_repos
     end
 
     def monorepo
-      repo_merger.monorepo
+      configuration.monorepo
     end
 
     def commit_map
-      repo_merger.commit_map
+      configuration.commit_map
     end
 
     def create_progressbar(title)
@@ -146,7 +146,7 @@ class RepositoryMerger
 
       ProgressBar.create(
         format: bar_format,
-        output: repo_merger.log_output,
+        output: configuration.log_output,
         title: title,
         total: unprocessed_original_commit_queue.size
       )

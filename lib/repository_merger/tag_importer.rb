@@ -4,10 +4,10 @@ require 'ruby-progressbar'
 
 class RepositoryMerger
   class TagImporter
-    attr_reader :repo_merger, :tag_name_transformer, :progressbar
+    attr_reader :configuration, :tag_name_transformer, :progressbar
 
-    def initialize(repo_merger, tag_name_transformer)
-      @repo_merger = repo_merger
+    def initialize(configuration:, tag_name_transformer:)
+      @configuration = configuration
       @tag_name_transformer = tag_name_transformer
       @progressbar = create_progressbar
     end
@@ -60,15 +60,15 @@ class RepositoryMerger
     end
 
     def original_repos
-      repo_merger.original_repos
+      configuration.original_repos
     end
 
     def monorepo
-      repo_merger.monorepo
+      configuration.monorepo
     end
 
     def commit_map
-      repo_merger.commit_map
+      configuration.commit_map
     end
 
     def create_progressbar
@@ -78,7 +78,7 @@ class RepositoryMerger
 
       ProgressBar.create(
         format: bar_format,
-        output: repo_merger.log_output,
+        output: configuration.log_output,
         total: original_tags.size
       )
     end
