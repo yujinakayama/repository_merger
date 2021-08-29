@@ -54,12 +54,15 @@ class RepositoryMerger
     attr_accessor :current_checked_out_commit_id
 
     def checkout_contents_if_needed(commit)
+      return if empty_commit_for_debug?
       return if commit.id == current_checked_out_commit_id
       commit.checkout_contents
       @current_checked_out_commit_id = commit.id
     end
 
     def stage_contents_of(original_commit, subdirectory:)
+      return if empty_commit_for_debug?
+
       original_commit.extract_contents_into(File.join(path, subdirectory))
 
       # First, track (almost) all files (including removed files) with .gitignore rules
@@ -85,13 +88,21 @@ class RepositoryMerger
         message: message || original_rugged_commit.message,
         committer: original_rugged_commit.committer,
         author: original_rugged_commit.author,
-        tree: rugged_repo.index.write_tree,
+        tree: empty_commit_for_debug? ? empty_tree.oid : rugged_repo.index.write_tree,
         parents: new_parent_ids,
       })
 
       @current_checked_out_commit_id = new_commit_id
 
       lookup(new_commit_id)
+    end
+
+    def empty_commit_for_debug?
+      ENV['REPO_MERGER_IMPORT_AS_EMPTY_COMMITS']
+    end
+
+    def empty_tree
+      @empty_tree ||= Rugged::Tree.empty(rugged_repo)
     end
   end
 end
