@@ -43,21 +43,29 @@ module GitHelper
     end
   end
 
-  def git_graph(repo_path, branch_names = nil, format: nil)
-    args = ['log', '--graph']
-    args << "--format=#{format}" if format
+  def git_graph(arg, format: nil)
+    command = ['log', '--graph']
+    command << "--format=#{format}" if format
 
-    unless branch_names
-      Dir.chdir(repo_path) do
-        ref_names = git(['for-each-ref', '--format', '%(refname)']).each_line.map(&:chomp)
-        branch_names = ref_names.grep(%r{\Arefs/heads/}).map { |ref| ref.sub(%r{\Arefs/heads/}, '') }
-      end
+    if arg.respond_to?(:repo) && arg.respond_to?(:revision_id)
+      repo_path = arg.repo.path
+      revision_ids = [arg.revision_id]
+    else
+      repo_path = arg
+      revision_ids = branch_names_in(repo_path)
     end
 
-    args.concat(Array(branch_names))
+    command.concat(revision_ids)
 
     Dir.chdir(repo_path) do
-      git(args)
+      git(command)
+    end
+  end
+
+  def branch_names_in(repo_path)
+    Dir.chdir(repo_path) do
+      ref_names = git(['for-each-ref', '--format', '%(refname)']).each_line.map(&:chomp)
+      ref_names.grep(%r{\Arefs/heads/}).map { |ref| ref.sub(%r{\Arefs/heads/}, '') }
     end
   end
 

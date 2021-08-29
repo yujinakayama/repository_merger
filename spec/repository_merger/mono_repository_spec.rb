@@ -23,7 +23,6 @@ class RepositoryMerger
         new_root_commit = monorepo.import_commit(
           original_commits[0],
           new_parents: [],
-          branch_name: 'some_branch',
           subdirectory: 'rspec-core'
         )
 
@@ -52,7 +51,7 @@ class RepositoryMerger
           +LICENSE
         END
 
-        expect(git_graph(monorepo.path, 'some_branch', format: '%s')).to eq(<<~END)
+        expect(git_graph(new_root_commit, format: '%s')).to eq(<<~END)
           * Initial commit to rspec-core.
         END
       end
@@ -62,7 +61,6 @@ class RepositoryMerger
           monorepo.import_commit(
             original_commits[0],
             new_parents: [],
-            branch_name: 'some_branch',
             subdirectory: 'rspec-core'
           )
         end
@@ -71,7 +69,6 @@ class RepositoryMerger
           new_second_commit = monorepo.import_commit(
             original_commits[1],
             new_parents: [new_root_commit],
-            branch_name: 'some_branch',
             subdirectory: 'rspec-core'
           )
 
@@ -96,7 +93,7 @@ class RepositoryMerger
             +(The MIT License)
           END
 
-          expect(git_graph(monorepo.path, 'some_branch', format: '%s')).to eq(<<~END)
+          expect(git_graph(new_second_commit, format: '%s')).to eq(<<~END)
             * Version bump to 0.0.0
             * Initial commit to rspec-core.
           END
@@ -126,7 +123,6 @@ class RepositoryMerger
           monorepo.import_commit(
             original_commits[0],
             new_parents: [],
-            branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
         end
@@ -135,7 +131,6 @@ class RepositoryMerger
           new_second_commit = monorepo.import_commit(
             original_commits[1],
             new_parents: [new_root_commit],
-            branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
 
@@ -179,7 +174,6 @@ class RepositoryMerger
           monorepo.import_commit(
             original_commits[0],
             new_parents: [],
-            branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
         end
@@ -188,7 +182,6 @@ class RepositoryMerger
           new_second_commit = monorepo.import_commit(
             original_commits[1],
             new_parents: [new_root_commit],
-            branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
 
@@ -228,7 +221,6 @@ class RepositoryMerger
           monorepo.import_commit(
             original_commits[0],
             new_parents: [],
-            branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
         end
@@ -237,7 +229,6 @@ class RepositoryMerger
           new_second_commit = monorepo.import_commit(
             original_commits[1],
             new_parents: [new_root_commit],
-            branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
 
@@ -299,7 +290,6 @@ class RepositoryMerger
           new_commit = monorepo.import_commit(
             original_commit,
             new_parents: [],
-            branch_name: 'some_branch',
             subdirectory: 'subdirectory'
           )
 
@@ -379,37 +369,34 @@ class RepositoryMerger
           new_master_root_commit = monorepo.import_commit(
             repo_a.branch('master').topologically_ordered_commits_from_root[0],
             new_parents: [],
-            branch_name: 'master',
             subdirectory: 'repo_a'
           )
 
           new_master_second_commit = monorepo.import_commit(
             repo_b.branch('master').topologically_ordered_commits_from_root[0],
             new_parents: [new_master_root_commit],
-            branch_name: 'master',
             subdirectory: 'repo_b'
           )
 
           new_feature_commit = monorepo.import_commit(
             repo_a.branch('feature').topologically_ordered_commits_from_root[1],
             new_parents: [new_master_second_commit],
-            branch_name: 'feature',
             subdirectory: 'repo_a'
           )
 
           new_master_third_commit = monorepo.import_commit(
             repo_b.branch('master').topologically_ordered_commits_from_root[1],
             new_parents: [new_master_second_commit],
-            branch_name: 'master',
             subdirectory: 'repo_b'
           )
 
-          monorepo.import_commit(
+          new_master_last_commit = monorepo.import_commit(
             repo_a.branch('master').topologically_ordered_commits_from_root[2],
             new_parents: [new_master_third_commit, new_feature_commit],
-            branch_name: 'master',
             subdirectory: 'repo_a'
           )
+
+          monorepo.create_or_update_branch('master', commit_id: new_master_last_commit.id)
         end
 
         it 'creates a commit with proper contents even outside of the specified subdirectory' do
@@ -455,14 +442,12 @@ class RepositoryMerger
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
             new_parents: [],
-            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
             new_parents: [new_parent_commit],
-            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
         end
@@ -505,14 +490,12 @@ class RepositoryMerger
           new_parent_commit = monorepo.import_commit(
             original_commit.parents.first,
             new_parents: [],
-            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
 
           monorepo.import_commit(
             original_commit,
             new_parents: [new_parent_commit],
-            branch_name: 'main',
             subdirectory: 'rspec-core'
           )
         end

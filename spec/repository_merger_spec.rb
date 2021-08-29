@@ -12,8 +12,8 @@ RSpec.describe RepositoryMerger do
     "2020-01-01 #{time} +0000"
   end
 
-  def commit_graph_of(repo_path, branch_names = nil)
-    git_graph(repo_path, branch_names, format: '%ci %s%d')
+  def commit_graph_of(repo_path)
+    git_graph(repo_path, format: '%ci %s%d')
   end
 
   def commit_fingerprints_in(repo_path, revision_id)
@@ -413,7 +413,7 @@ RSpec.describe RepositoryMerger do
     it 'imports tags by transforming names or skips importing some tags if it should' do
       repo_merger.import_tags(tag_name_transformer: tag_name_transformer)
 
-      expect(commit_graph_of(monorepo_path, 'master')).to eq(<<~'END')
+      expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
         * 2020-01-01 00:07:10 +0000 [repo_b] master 4 (HEAD -> master, tag: repo_b-1.1)
         * 2020-01-01 00:07:00 +0000 [repo_a] master 5 (tag: repo_a-1.1)
         *   2020-01-01 00:06:00 +0000 [repo_a] Merge branch 'feature-a'
@@ -458,7 +458,7 @@ RSpec.describe RepositoryMerger do
       it 'properly imports them with message and metadata' do
         repo_merger.import_tags(tag_name_transformer: tag_name_transformer)
 
-        expect(commit_graph_of(monorepo_path, 'master')).to eq(<<~'END')
+        expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:01:00 +0000 [repo_a] master 2 (HEAD -> master, tag: repo_a-1.0)
           * 2020-01-01 00:00:10 +0000 [repo_b] master 1
           * 2020-01-01 00:00:00 +0000 [repo_a] master 1

@@ -9,22 +9,16 @@ class RepositoryMerger
       configure
     end
 
-    def import_commit(original_commit, new_parents:, subdirectory:, message: nil, branch_name: nil)
+    def import_commit(original_commit, new_parents:, subdirectory:, message: nil)
       checkout_contents_if_needed(new_parents.first) unless new_parents.empty?
 
       stage_contents_of(original_commit, subdirectory: subdirectory)
 
-      new_commit = create_commit_with_metadata_of(
+      create_commit_with_metadata_of(
         original_commit,
         new_parent_ids: new_parents.map(&:id),
         message: message
       )
-
-      if branch_name
-        create_or_update_branch(branch_name, commit_id: new_commit.id)
-      end
-
-      new_commit
     end
 
     def import_tag(original_tag, new_commit_id:, new_tag_name:)
