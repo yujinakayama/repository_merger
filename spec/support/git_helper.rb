@@ -53,23 +53,14 @@ module GitHelper
 
     if arg.respond_to?(:repo) && arg.respond_to?(:revision_id)
       repo_path = arg.repo.path
-      revision_ids = [arg.revision_id]
+      command << arg.revision_id
     else
       repo_path = arg
-      revision_ids = branch_names_in(repo_path)
+      command << '--all'
     end
-
-    command.concat(revision_ids)
 
     Dir.chdir(repo_path) do
       git(command)
-    end
-  end
-
-  def branch_names_in(repo_path)
-    Dir.chdir(repo_path) do
-      ref_names = git(['for-each-ref', '--format', '%(refname)']).each_line.map(&:chomp)
-      ref_names.grep(%r{\Arefs/heads/}).map { |ref| ref.sub(%r{\Arefs/heads/}, '') }
     end
   end
 
