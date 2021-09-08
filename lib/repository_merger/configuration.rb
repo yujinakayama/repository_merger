@@ -15,23 +15,7 @@ class RepositoryMerger
     end
 
     def commit_map
-      @commit_map ||= begin
-        commit_map =
-          if commit_map_file_path && File.exist?(commit_map_file_path)
-            CommitMap.load_from(commit_map_file_path, monorepo: monorepo)
-          else
-            CommitMap.new(monorepo: monorepo)
-          end
-
-        if commit_map_file_path
-          at_exit do
-            commit_map.save_to(commit_map_file_path)
-            puts "Saved commit map to #{commit_map_file_path}."
-          end
-        end
-
-        commit_map
-      end
+      @commit_map ||= CommitMap.new(path: commit_map_file_path, monorepo: monorepo)
     end
   end
 end

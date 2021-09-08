@@ -28,6 +28,8 @@ class RepositoryMerger
 
       branch_merger.run
     end
+  ensure
+    configuration.commit_map.save if configuration.commit_map.path
   end
 
   def import_tags(tag_name_transformer:)
