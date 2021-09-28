@@ -95,7 +95,7 @@ class RepositoryMerger
           * 2020-01-01 00:00:00 +0000 [repo_a] master 1
         END
 
-        previous_branch_merger.configuration.commit_map.save
+        previous_branch_merger.configuration.repo_commit_map.save
         expect(File.exist?(commit_map_file_path)).to be true
       end
 
@@ -110,7 +110,7 @@ class RepositoryMerger
           * 2020-01-01 00:00:00 +0000 [repo_a] master 1
         END
 
-        expect(branch_merger.configuration.commit_map.map.values).to all have_attributes(size: 1)
+        expect(branch_merger.configuration.repo_commit_map.map.values).to all have_attributes(size: 1)
       end
     end
   end

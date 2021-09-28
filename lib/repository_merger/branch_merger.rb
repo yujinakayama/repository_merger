@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'ruby-progressbar'
+require_relative 'branch_local_commit_map'
 require_relative 'commit'
 
 class RepositoryMerger
@@ -31,6 +32,8 @@ class RepositoryMerger
       if monorepo_branch_head_commit
         monorepo.create_or_update_branch(branch_name_in_monorepo, commit_id: monorepo_branch_head_commit.id)
       end
+
+      repo_commit_map.merge!(branch_local_commit_map)
     end
 
     private
@@ -41,7 +44,7 @@ class RepositoryMerger
       return false unless branch_in_monorepo
 
       possible_branch_head_id_sets = original_branches.map do |original_branch|
-        commit_map.monorepo_commit_ids_for(original_branch.target_commit)
+        repo_commit_map.monorepo_commit_ids_for(original_branch.target_commit)
       end
 
       return false if possible_branch_head_id_sets.any?(&:empty?)
@@ -58,6 +61,11 @@ class RepositoryMerger
         monorepo_commit = import_commit_into_monorepo(original_commit)
       end
 
+      branch_local_commit_map.register(
+        monorepo_commit_id: monorepo_commit.id,
+        original_commit: original_commit
+      )
+
       if mainline?(original_commit)
         @monorepo_branch_head_commit = monorepo_commit
       end
@@ -66,7 +74,7 @@ class RepositoryMerger
     end
 
     def already_imported_monorepo_commit_for(original_commit)
-      monorepo_commits = commit_map.monorepo_commits_for(original_commit)
+      monorepo_commits = repo_commit_map.monorepo_commits_for(original_commit)
 
       monorepo_commits.find do |monorepo_commit|
         monorepo_commit.parents == parent_commits_in_monorepo_for(original_commit)
@@ -85,24 +93,19 @@ class RepositoryMerger
 
       progressbar.log("    Created commit #{new_commit_in_monorepo.id[0,7]}, parents: #{parent_commits_in_monorepo.map { |commit| commit.id[0,7] }}, mainline: #{mainline?(original_commit)}")
 
-      commit_map.register(
-        monorepo_commit_id: new_commit_in_monorepo.id,
-        original_commit: original_commit
-      )
-
       new_commit_in_monorepo
     end
 
     def parent_commits_in_monorepo_for(original_commit)
       if original_commit.root?
-        [monorepo_branch_head_commit].compact
-      else
-        original_commit.parents.map do |original_parent_commit|
-          if mainline?(original_commit) && mainline?(original_parent_commit)
-            monorepo_branch_head_commit
-          else
-            commit_map.monorepo_commits_for(original_parent_commit).first
-          end
+        return [monorepo_branch_head_commit].compact
+      end
+
+      original_commit.parents.map do |original_parent_commit|
+        if mainline?(original_commit) && mainline?(original_parent_commit)
+          monorepo_branch_head_commit
+        else
+          branch_local_commit_map.monorepo_commit_for(original_parent_commit)
         end
       end
     end
@@ -153,8 +156,12 @@ class RepositoryMerger
       configuration.monorepo
     end
 
-    def commit_map
-      configuration.commit_map
+    def repo_commit_map
+      configuration.repo_commit_map
+    end
+
+    def branch_local_commit_map
+      @branch_local_commit_map ||= BranchLocalCommitMap.new(monorepo: monorepo)
     end
 
     def create_progressbar(title)

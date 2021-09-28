@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative 'commit_map'
 require_relative 'mono_repository'
 require_relative 'repository'
+require_relative 'repository_commit_map'
 
 class RepositoryMerger
   Configuration = Struct.new(:original_repo_paths, :monorepo_path, :commit_map_file_path, :log_output, keyword_init: true) do
@@ -14,8 +14,8 @@ class RepositoryMerger
       @monorepo ||= MonoRepository.new(monorepo_path)
     end
 
-    def commit_map
-      @commit_map ||= CommitMap.new(path: commit_map_file_path, monorepo: monorepo)
+    def repo_commit_map
+      @commit_map ||= RepositoryCommitMap.new(path: commit_map_file_path, monorepo: monorepo)
     end
   end
 end
