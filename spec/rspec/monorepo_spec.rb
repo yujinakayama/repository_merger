@@ -40,7 +40,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
     describe "#{branch_name} branch" do
       def commit_fingerprints_in(repo_path, revision_id)
         log = Dir.chdir(repo_path) do
-          git(['log', '--format=%ai %ae, %ci %ce: %s', revision_id])
+          git(['log', '--format=%ci %ce, %ai %ae: %s', revision_id])
         end
 
         log.split("\n")
