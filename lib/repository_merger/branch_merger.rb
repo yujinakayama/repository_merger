@@ -6,6 +6,7 @@ require_relative 'commit'
 class RepositoryMerger
   class BranchMerger
     attr_reader :configuration, :target_branch_name, :all_branch_names, :commit_message_transformer, :progressbar
+    attr_accessor :wants_to_abort
 
     def initialize(configuration:, target_branch_name:, all_branch_names:, commit_message_transformer: nil, progressbar_title: nil)
       @configuration = configuration
@@ -25,6 +26,7 @@ class RepositoryMerger
 
       while (original_commit = unprocessed_original_commit_queue.next)
         process_commit(original_commit)
+        break if wants_to_abort
       end
     end
 
