@@ -25,7 +25,6 @@ class RepositoryMerger
       BranchMerger.new(
         configuration: create_configuration,
         target_branch_name: 'master',
-        all_branch_names: ['master'],
         commit_message_transformer: commit_message_transformer
       )
     end
