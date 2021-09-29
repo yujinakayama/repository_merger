@@ -13,31 +13,30 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
     end
   end
 
-  %w[
-    main
-    2-0-stable
-    2-2-maintenance
-    2-3-maintenance
-    2-5-maintenance
-    2-6-maintenance
-    2-7-maintenance
-    2-9-maintenance
-    2-10-maintenance
-    2-11-maintenance
-    2-13-maintenance
-    2-14-maintenance
-    2-99-maintenance
-    3-0-maintenance
-    3-1-maintenance
-    3-2-maintenance
-    3-3-maintenance
-    3-4-maintenance
-    3-5-maintenance
-    3-6-maintenance
-    3-7-maintenance
-    3-8-maintenance
-    3-9-maintenance
-  ].each do |branch_name|
+  {
+    'main'             => { graph: true,  contents: true  },
+    '2-2-maintenance'  => { graph: false, contents: false },
+    '2-3-maintenance'  => { graph: false, contents: false },
+    '2-5-maintenance'  => { graph: false, contents: false },
+    '2-6-maintenance'  => { graph: false, contents: false },
+    '2-7-maintenance'  => { graph: false, contents: false },
+    '2-9-maintenance'  => { graph: false, contents: false },
+    '2-10-maintenance' => { graph: false, contents: false },
+    '2-11-maintenance' => { graph: false, contents: false },
+    '2-13-maintenance' => { graph: false, contents: false },
+    '2-14-maintenance' => { graph: true,  contents: true  },
+    '2-99-maintenance' => { graph: true,  contents: true  },
+    '3-0-maintenance'  => { graph: true,  contents: true  },
+    '3-1-maintenance'  => { graph: true,  contents: true  },
+    '3-2-maintenance'  => { graph: true,  contents: true  },
+    '3-3-maintenance'  => { graph: true,  contents: true  },
+    '3-4-maintenance'  => { graph: true,  contents: true  },
+    '3-5-maintenance'  => { graph: true,  contents: true  },
+    '3-6-maintenance'  => { graph: true,  contents: true  },
+    '3-7-maintenance'  => { graph: true,  contents: true  },
+    '3-8-maintenance'  => { graph: false, contents: true  },
+    '3-9-maintenance'  => { graph: false, contents: true  },
+  }.each do |branch_name, expected_results|
     describe "#{branch_name} branch" do
       def commit_fingerprints_in(repo_path, revision_id)
         log = Dir.chdir(repo_path) do
@@ -52,20 +51,14 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
       end
 
       let(:commit_fingerprints_in_original_repos) do
-        fingerprints = %w[rspec rspec-core rspec-expectations rspec-mocks rspec-support].sum([]) do |repo_name|
+        original_repo_names.sum([]) do |repo_name|
           commit_fingerprints_in("original_repos/#{repo_name}", "origin/#{branch_name}").map do |fingerprint|
             # Some commits have wrongly quoted author/committer emails
             fingerprint
               .sub(': ', ": [#{repo_name.sub(/\Arspec-/, '')}] ")
               .gsub("'raysanchez1979@gmail.com'", 'raysanchez1979@gmail.com')
           end
-        rescue GitHelper::GitError
-          []
         end
-
-        raise if fingerprints.empty?
-
-        fingerprints
       end
 
       let(:original_repo_names) do
@@ -88,12 +81,12 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
         end
       end
 
-      pending 'contains all the original commits' do
+      it 'contains all the original commits', pending: !expected_results[:graph] do
         expect(commit_fingerprints_in_monorepo.sort.join("\n"))
           .to eq(commit_fingerprints_in_original_repos.sort.join("\n"))
       end
 
-      it 'has same contents as the original branch' do
+      it 'has same contents as the original branch', pending: !expected_results[:contents] do
         expect(list_of_files_with_digest('monorepo'))
           .to eq(list_of_files_with_digest('original_repos', only: original_repo_names))
       end
