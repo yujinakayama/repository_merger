@@ -19,11 +19,6 @@ class RepositoryMerger
     def run
       progressbar.log "Merging `#{target_branch_name}` branches of #{original_branches.map { |original_branch| original_branch.repo.name }.join(', ')} into `#{branch_name_in_monorepo}` branch of #{monorepo.path}..."
 
-      if original_branches_are_already_imported?
-        progressbar.log "  The branches are already imported."
-        return
-      end
-
       while (original_commit = unprocessed_original_commit_queue.next)
         process_commit(original_commit)
         break if wants_to_abort
@@ -39,18 +34,6 @@ class RepositoryMerger
     private
 
     attr_reader :monorepo_branch_head_commit
-
-    def original_branches_are_already_imported?
-      return false unless branch_in_monorepo
-
-      possible_branch_head_id_sets = original_branches.map do |original_branch|
-        repo_commit_map.monorepo_commit_ids_for(original_branch.target_commit)
-      end
-
-      return false if possible_branch_head_id_sets.any?(&:empty?)
-
-      possible_branch_head_id_sets.flatten.include?(branch_in_monorepo.target_commit.id)
-    end
 
     def process_commit(original_commit)
       progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
