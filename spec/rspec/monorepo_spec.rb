@@ -1,3 +1,4 @@
+require 'repository_merger/github_issue_reference'
 require 'digest'
 require 'find'
 
@@ -50,12 +51,22 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       let(:commit_fingerprints_in_original_repos) do
         original_repo_names.sum([]) do |repo_name|
           commit_fingerprints_in("original_repos/#{repo_name}", "origin/#{branch_name}").map do |fingerprint|
-            # Some commits have wrongly quoted author/committer emails
-            fingerprint
-              .sub(': ', ": [#{repo_name.sub(/\Arspec-/, '')}] ")
-              .gsub("'raysanchez1979@gmail.com'", 'raysanchez1979@gmail.com')
+            convert_original_commit_fingerprint(fingerprint, repo_name)
           end
         end
+      end
+
+      def convert_original_commit_fingerprint(fingerprint, repo_name)
+        fingerprint = fingerprint.sub(': ', ": [#{repo_name.sub(/\Arspec-/, '')}] ")
+
+        fingerprint = RepositoryMerger::GitHubIssueReference.convert_repo_local_references_to_absolute_ones_in(
+          fingerprint,
+          username: 'rspec',
+          repo_name: repo_name
+        )
+
+        # Some commits have wrongly quoted author/committer emails
+        fingerprint.gsub("'raysanchez1979@gmail.com'", 'raysanchez1979@gmail.com')
       end
 
       let(:original_repo_names) do
