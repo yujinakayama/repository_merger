@@ -32,8 +32,12 @@ def main
 
   repo_merger.import_tags(
     tag_name_transformer: proc do |original_tag|
+      tag_name = original_tag.name
+      tag_name = "v#{tag_name}" if tag_name.match?(/\A\d+\.\d+\.\d+/)
+
       scope = original_tag.repo.name.sub(/\Arspec-/, '')
-      "#{original_tag.name}-#{scope}"
+
+      "#{tag_name}-#{scope}"
     end
   )
 
