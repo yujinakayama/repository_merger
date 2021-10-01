@@ -20,7 +20,7 @@ def main
   repo_merger = RepositoryMerger.new(original_repo_paths, monorepo_path: monorepo_path)
 
   all_branch_names = repo_merger.configuration.original_repos.flat_map { |repo| repo.branches.map(&:name) }.uniq.sort
-  target_branch_names = ['origin/main'] + all_branch_names.grep(/\Aorigin\/\d+-\d+-(maintenance|stable)\z/)
+  target_branch_names = ['origin/main'] + all_branch_names.grep(/\Aorigin\/\d+-\d+-maintenance\z/)
 
   repo_merger.merge_branches(
     target_branch_names,
