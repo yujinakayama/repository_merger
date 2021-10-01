@@ -26,7 +26,7 @@ GEM
       rspec-support (~> 3.10.0)
     rspec-support (3.10.2)
     ruby-progressbar (1.11.0)
-    rugged (1.1.1)
+    rugged (1.2.0)
 
 PLATFORMS
   ruby
@@ -39,4 +39,4 @@ DEPENDENCIES
   rugged
 
 BUNDLED WITH
-   2.1.4
+   2.2.28
