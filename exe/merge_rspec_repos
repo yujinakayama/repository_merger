@@ -25,8 +25,8 @@ def main
   repo_merger.merge_branches(
     target_branch_names,
     commit_message_transformer: proc do |original_commit|
-      scope = "[#{original_commit.repo.name.sub(/\Arspec-/, '')}]"
-      "#{scope} #{original_commit.message}"
+      scope = original_commit.repo.name.sub(/\Arspec-/, '')
+      "[#{scope}] #{original_commit.message}"
     end
   )
 
