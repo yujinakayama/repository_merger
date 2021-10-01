@@ -63,6 +63,14 @@ class RepositoryMerger
       id
     end
 
+    def inspect
+      "#<#{self.class} id=#{id[0,7]} repo=#{repo.name} message=#{message.each_line.first.chomp.inspect}>"
+    end
+
+    def pretty_print(pp)
+      pp.text(inspect)
+    end
+
     private
 
     def create_parent(parent_rugged_commit)
