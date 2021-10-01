@@ -28,10 +28,6 @@ class RepositoryMerger
       parents.empty?
     end
 
-    def merge_commit?
-      parents.size > 1
-    end
-
     def parents
       @parents ||= rugged_commit.parents.map do |parent_rugged_commit|
         create_parent(parent_rugged_commit)
