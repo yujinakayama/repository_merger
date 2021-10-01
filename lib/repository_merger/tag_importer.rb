@@ -40,7 +40,7 @@ class RepositoryMerger
     end
 
     def import_tag_into_monorepo(original_tag, new_tag_name:)
-      target_commit_id_in_monorepo = commit_map.monorepo_commit_id_for(original_tag.target_commit)
+      target_commit_id_in_monorepo = monorepo_commit_id_for(original_tag)
 
       unless target_commit_id_in_monorepo
         commit_description = "#{original_tag.target_commit.message.chomp.inspect} (#{original_tag.target_commit.id[0, 7]}) in #{original_tag.repo.name}"
@@ -55,6 +55,11 @@ class RepositoryMerger
       )
     end
 
+    def monorepo_commit_id_for(original_tag)
+      # TODO: Choosing the first one might be wrong
+      configuration.repo_commit_map.monorepo_commit_ids_for(original_tag.target_commit).first
+    end
+
     def original_tags
       @original_tags ||= original_repos.flat_map(&:tags)
     end
@@ -65,10 +70,6 @@ class RepositoryMerger
 
     def monorepo
       configuration.monorepo
-    end
-
-    def commit_map
-      configuration.commit_map
     end
 
     def create_progressbar

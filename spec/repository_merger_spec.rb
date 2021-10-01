@@ -183,20 +183,22 @@ RSpec.describe RepositoryMerger do
         end
       end
 
-      it 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
+      it 'imports commits by creating multiple commits for an original commit in each branch if needed' do
         repo_merger.merge_branches(['master', 'maintenance'], commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:05:00 +0000 [repo_a] master 4 (HEAD -> master)
           * 2020-01-01 00:04:10 +0000 [repo_b] master 3
+          * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching
+          * 2020-01-01 00:01:00 +0000 [repo_a] master 2
           | * 2020-01-01 00:04:00 +0000 [repo_a] maintenance 2 (maintenance)
           | * 2020-01-01 00:03:10 +0000 [repo_b] maintenance 3
           | * 2020-01-01 00:03:00 +0000 [repo_a] maintenance 1
+          | * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching
+          | * 2020-01-01 00:01:00 +0000 [repo_a] master 2
           | * 2020-01-01 00:00:40 +0000 [repo_b] maintenance 2 (earlier than repo_a's branching point in date order)
           | * 2020-01-01 00:00:30 +0000 [repo_b] maintenance 1 (earlier than repo_a's branching point in date order)
           |/
-          * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching
-          * 2020-01-01 00:01:00 +0000 [repo_a] master 2
           * 2020-01-01 00:00:20 +0000 [repo_b] master 2 / maintenance branching
           * 2020-01-01 00:00:10 +0000 [repo_b] master 1
           * 2020-01-01 00:00:00 +0000 [repo_a] master 1
@@ -247,15 +249,20 @@ RSpec.describe RepositoryMerger do
         end
       end
 
-      it 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
+      it 'imports commits by creating multiple commits for an original commit in each branch if needed' do
         repo_merger.merge_branches(['master', 'maintenance', 'bugfix'], commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:03:00 +0000 [repo_a] bugfix 1 (bugfix)
+          * 2020-01-01 00:02:00 +0000 [repo_a] maintenance 1 / bugfix branching
+          * 2020-01-01 00:01:00 +0000 [repo_a] master 2 / maintenance branching
           * 2020-01-01 00:00:40 +0000 [repo_b] bugfix 1
-          * 2020-01-01 00:02:00 +0000 [repo_a] maintenance 1 / bugfix branching (maintenance)
+          | * 2020-01-01 00:02:00 +0000 [repo_a] maintenance 1 / bugfix branching (maintenance)
+          | * 2020-01-01 00:01:00 +0000 [repo_a] master 2 / maintenance branching
+          |/
           * 2020-01-01 00:00:30 +0000 [repo_b] maintenance 1 / bugfix branching
-          * 2020-01-01 00:01:00 +0000 [repo_a] master 2 / maintenance branching (HEAD -> master)
+          | * 2020-01-01 00:01:00 +0000 [repo_a] master 2 / maintenance branching (HEAD -> master)
+          |/
           * 2020-01-01 00:00:20 +0000 [repo_b] master 2 / maintenance branching
           * 2020-01-01 00:00:10 +0000 [repo_b] master 1
           * 2020-01-01 00:00:00 +0000 [repo_a] master 1
@@ -290,18 +297,121 @@ RSpec.describe RepositoryMerger do
         end
       end
 
-      it 'imports commits without creating duplicate commits nor losing commits while keeping date order as much as possible' do
+      it 'ignores the repo' do
         repo_merger.merge_branches(['master', 'maintenance'], commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:03:00 +0000 [repo_a] maintenance 1 (maintenance)
-          * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching (HEAD -> master)
+          * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching
           * 2020-01-01 00:01:00 +0000 [repo_a] master 2
-          * 2020-01-01 00:00:30 +0000 [repo_b] master 3
-          * 2020-01-01 00:00:20 +0000 [repo_b] master 2
+          | * 2020-01-01 00:02:00 +0000 [repo_a] master 3 / maintenance branching (HEAD -> master)
+          | * 2020-01-01 00:01:00 +0000 [repo_a] master 2
+          | * 2020-01-01 00:00:30 +0000 [repo_b] master 3
+          | * 2020-01-01 00:00:20 +0000 [repo_b] master 2
+          | * 2020-01-01 00:00:10 +0000 [repo_b] master 1
+          |/
+          * 2020-01-01 00:00:00 +0000 [repo_a] master 1
+        END
+      end
+    end
+
+    context 'when importing multiple branches and one of them is merged into another after branching in a repo' do
+      # * 2020-01-01 00:04:00 +0000 maintenance 2 (HEAD -> maintenance)
+      # * 2020-01-01 00:02:00 +0000 maintenance 1
+      # | * 2020-01-01 00:03:00 +0000 master 3 (this should not be included in the merged maintenance branch) (master)
+      # |/
+      # * 2020-01-01 00:01:00 +0000 master 2 / maintenance branching
+      # * 2020-01-01 00:00:00 +0000 master 1
+      let(:repo_a_path) do
+        git_init('repo_a') do
+          with_git_time('00:00:00') { git_commit(message: 'master 1') }
+          with_git_time('00:01:00') { git_commit(message: 'master 2 / maintenance branching') }
+
+          git('checkout -b maintenance')
+          with_git_time('00:02:00') { git_commit(message: 'maintenance 1') }
+
+          git('checkout master')
+          with_git_time('00:03:00') { git_commit(message: 'master 3 (this should not be included in the merged maintenance branch)') }
+
+          git('checkout maintenance')
+          with_git_time('00:04:00') { git_commit(message: 'maintenance 2') }
+        end
+      end
+
+      # * 2020-01-01 00:04:10 +0000 maintenance 2 (HEAD -> maintenance)
+      # *   2020-01-01 00:03:50 +0000 Merge branch 'bugfix' into maintenance
+      # |\
+      # * | 2020-01-01 00:00:30 +0000 maintenance 1
+      # | | *   2020-01-01 00:03:40 +0000 Merge branch 'bugfix' (master)
+      # | | |\
+      # | | |/
+      # | |/|
+      # | * | 2020-01-01 00:03:20 +0000 bugfix 1 (bugfix)
+      # | | * 2020-01-01 00:03:30 +0000 master 4
+      # | |/
+      # | * 2020-01-01 00:03:10 +0000 master 3 / bugfix branching
+      # |/
+      # * 2020-01-01 00:00:20 +0000 master 2 / maintenance branching
+      # * 2020-01-01 00:00:10 +0000 master 1
+      let(:repo_b_path) do
+        git_init('repo_b') do
+          with_git_time('00:00:10') { git_commit(message: 'master 1') }
+          with_git_time('00:00:20') { git_commit(message: 'master 2 / maintenance branching') }
+
+          git('checkout -b maintenance')
+          with_git_time('00:00:30') { git_commit(message: 'maintenance 1') }
+
+          git('checkout master')
+          with_git_time('00:03:10') { git_commit(message: 'master 3 / bugfix branching') }
+
+          git('checkout -b bugfix')
+          with_git_time('00:03:20') { git_commit(message: 'bugfix 1') }
+
+          git('checkout master')
+          with_git_time('00:03:30') { git_commit(message: 'master 4') }
+          with_git_time('00:03:40') { git_merge('bugfix') }
+
+          git('checkout maintenance')
+          with_git_time('00:03:50') { git_merge('bugfix') }
+          with_git_time('00:04:10') { git_commit(message: 'maintenance 2') }
+        end
+      end
+
+      it 'reassembles the commit graph so that all the branches have no contamination commits' do
+        repo_merger.merge_branches(['master', 'maintenance'], commit_message_transformer: commit_message_transformer)
+
+        expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
+          * 2020-01-01 00:04:10 +0000 [repo_b] maintenance 2 (maintenance)
+          * 2020-01-01 00:04:00 +0000 [repo_a] maintenance 2
+          *   2020-01-01 00:03:50 +0000 [repo_b] Merge branch 'bugfix' into maintenance
+          |\
+          | * 2020-01-01 00:03:20 +0000 [repo_b] bugfix 1
+          | * 2020-01-01 00:03:10 +0000 [repo_b] master 3 / bugfix branching
+          * | 2020-01-01 00:02:00 +0000 [repo_a] maintenance 1
+          * | 2020-01-01 00:01:00 +0000 [repo_a] master 2 / maintenance branching
+          * | 2020-01-01 00:00:30 +0000 [repo_b] maintenance 1
+          |/
+          | *   2020-01-01 00:03:40 +0000 [repo_b] Merge branch 'bugfix' (HEAD -> master)
+          | |\
+          | | * 2020-01-01 00:03:20 +0000 [repo_b] bugfix 1
+          | * | 2020-01-01 00:03:30 +0000 [repo_b] master 4
+          | |/
+          | * 2020-01-01 00:03:10 +0000 [repo_b] master 3 / bugfix branching
+          | * 2020-01-01 00:03:00 +0000 [repo_a] master 3 (this should not be included in the merged maintenance branch)
+          | * 2020-01-01 00:01:00 +0000 [repo_a] master 2 / maintenance branching
+          |/
+          * 2020-01-01 00:00:20 +0000 [repo_b] master 2 / maintenance branching
           * 2020-01-01 00:00:10 +0000 [repo_b] master 1
           * 2020-01-01 00:00:00 +0000 [repo_a] master 1
         END
+
+        expect(commit_fingerprints_in(monorepo_path, 'master')).to contain_exactly(
+          *(commit_fingerprints_in(repo_a_path, 'master') + commit_fingerprints_in(repo_b_path, 'master'))
+        )
+
+        expect(commit_fingerprints_in(monorepo_path, 'maintenance')).to contain_exactly(
+          *(commit_fingerprints_in(repo_a_path, 'maintenance') + commit_fingerprints_in(repo_b_path, 'maintenance'))
+        )
       end
     end
   end

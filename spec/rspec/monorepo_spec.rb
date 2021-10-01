@@ -34,8 +34,8 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}
     '3-5-maintenance'  => { graph: true,  contents: true  },
     '3-6-maintenance'  => { graph: true,  contents: true  },
     '3-7-maintenance'  => { graph: true,  contents: true  },
-    '3-8-maintenance'  => { graph: false, contents: true  },
-    '3-9-maintenance'  => { graph: false, contents: true  },
+    '3-8-maintenance'  => { graph: true,  contents: true  },
+    '3-9-maintenance'  => { graph: true,  contents: true  },
   }.each do |branch_name, expected_results|
     describe "#{branch_name} branch" do
       def commit_fingerprints_in(repo_path, revision_id)
