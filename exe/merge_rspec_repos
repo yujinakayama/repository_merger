@@ -32,7 +32,8 @@ def main
 
   repo_merger.import_tags(
     tag_name_transformer: proc do |original_tag|
-      "#{original_tag.repo.name}-#{original_tag.name}"
+      scope = original_tag.repo.name.sub(/\Arspec-/, '')
+      "#{original_tag.name}-#{scope}"
     end
   )
 
