@@ -71,7 +71,7 @@ module GitHelper
     FileUtils.mkdir_p(repo_path)
 
     Dir.chdir(repo_path) do
-      git('init')
+      git('init --initial-branch=main')
       yield if block_given?
     end
 

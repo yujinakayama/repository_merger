@@ -24,7 +24,7 @@ class RepositoryMerger
     def create_branch_merger
       BranchMerger.new(
         configuration: create_configuration,
-        target_branch_name: 'master',
+        target_branch_name: 'main',
         commit_message_transformer: commit_message_transformer
       )
     end
@@ -63,16 +63,16 @@ class RepositoryMerger
     context 'when resuming previous import' do
       let(:repo_a_path) do
         git_init('repo_a') do
-          with_git_time('00:00:00') { git_commit(message: 'master 1') }
-          with_git_time('00:01:00') { git_commit(message: 'master 2') }
-          with_git_time('00:02:00') { git_commit(message: 'master 3') }
+          with_git_time('00:00:00') { git_commit(message: 'main 1') }
+          with_git_time('00:01:00') { git_commit(message: 'main 2') }
+          with_git_time('00:02:00') { git_commit(message: 'main 3') }
         end
       end
 
       let(:repo_b_path) do
         git_init('repo_b') do
-          with_git_time('00:00:10') { git_commit(message: 'master 1') }
-          with_git_time('00:01:10') { git_commit(message: 'master 2') }
+          with_git_time('00:00:10') { git_commit(message: 'main 1') }
+          with_git_time('00:01:10') { git_commit(message: 'main 2') }
         end
       end
 
@@ -90,9 +90,9 @@ class RepositoryMerger
         previous_branch_merger.run
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
-          * 2020-01-01 00:01:00 +0000 [repo_a] master 2 (HEAD -> master)
-          * 2020-01-01 00:00:10 +0000 [repo_b] master 1
-          * 2020-01-01 00:00:00 +0000 [repo_a] master 1
+          * 2020-01-01 00:01:00 +0000 [repo_a] main 2 (HEAD -> main)
+          * 2020-01-01 00:00:10 +0000 [repo_b] main 1
+          * 2020-01-01 00:00:00 +0000 [repo_a] main 1
         END
 
         previous_branch_merger.configuration.repo_commit_map.save
@@ -103,11 +103,11 @@ class RepositoryMerger
         branch_merger.run
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
-          * 2020-01-01 00:02:00 +0000 [repo_a] master 3 (HEAD -> master)
-          * 2020-01-01 00:01:10 +0000 [repo_b] master 2
-          * 2020-01-01 00:01:00 +0000 [repo_a] master 2
-          * 2020-01-01 00:00:10 +0000 [repo_b] master 1
-          * 2020-01-01 00:00:00 +0000 [repo_a] master 1
+          * 2020-01-01 00:02:00 +0000 [repo_a] main 3 (HEAD -> main)
+          * 2020-01-01 00:01:10 +0000 [repo_b] main 2
+          * 2020-01-01 00:01:00 +0000 [repo_a] main 2
+          * 2020-01-01 00:00:10 +0000 [repo_b] main 1
+          * 2020-01-01 00:00:00 +0000 [repo_a] main 1
         END
 
         expect(branch_merger.configuration.repo_commit_map.map.values).to all have_attributes(size: 1)

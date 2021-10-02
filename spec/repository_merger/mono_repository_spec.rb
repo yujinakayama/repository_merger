@@ -116,7 +116,7 @@ class RepositoryMerger
         end
 
         let(:original_commits) do
-          original_repo.branch('master').topologically_ordered_commits_from_root
+          original_repo.branch('main').topologically_ordered_commits_from_root
         end
 
         let!(:new_root_commit) do
@@ -167,7 +167,7 @@ class RepositoryMerger
         end
 
         let(:original_commits) do
-          original_repo.branch('master').topologically_ordered_commits_from_root
+          original_repo.branch('main').topologically_ordered_commits_from_root
         end
 
         let!(:new_root_commit) do
@@ -214,7 +214,7 @@ class RepositoryMerger
         end
 
         let(:original_commits) do
-          original_repo.branch('master').topologically_ordered_commits_from_root
+          original_repo.branch('main').topologically_ordered_commits_from_root
         end
 
         let!(:new_root_commit) do
@@ -278,7 +278,7 @@ class RepositoryMerger
         end
 
         let(:original_commit) do
-          original_repo.branch('master').topologically_ordered_commits_from_root.first
+          original_repo.branch('main').topologically_ordered_commits_from_root.first
         end
 
         before do
@@ -329,7 +329,7 @@ class RepositoryMerger
       context 'when importing commits from multiple repositories into each subdirectory' do
         let(:repo_a) do
           repo_path = git_init('repo_a') do
-            File.write('branch.txt', "master\n")
+            File.write('branch.txt', "main\n")
             git('add .')
             git_commit(message: 'Add branch.txt')
 
@@ -339,7 +339,7 @@ class RepositoryMerger
             git('add .')
             git_commit(message: 'Modify branch.txt')
 
-            git('checkout master')
+            git('checkout main')
             git('merge --no-edit --no-ff feature')
           end
 
@@ -366,42 +366,42 @@ class RepositoryMerger
         end
 
         before do
-          new_master_root_commit = monorepo.import_commit(
-            repo_a.branch('master').topologically_ordered_commits_from_root[0],
+          new_main_root_commit = monorepo.import_commit(
+            repo_a.branch('main').topologically_ordered_commits_from_root[0],
             new_parents: [],
             subdirectory: 'repo_a'
           )
 
-          new_master_second_commit = monorepo.import_commit(
-            repo_b.branch('master').topologically_ordered_commits_from_root[0],
-            new_parents: [new_master_root_commit],
+          new_main_second_commit = monorepo.import_commit(
+            repo_b.branch('main').topologically_ordered_commits_from_root[0],
+            new_parents: [new_main_root_commit],
             subdirectory: 'repo_b'
           )
 
           new_feature_commit = monorepo.import_commit(
             repo_a.branch('feature').topologically_ordered_commits_from_root[1],
-            new_parents: [new_master_second_commit],
+            new_parents: [new_main_second_commit],
             subdirectory: 'repo_a'
           )
 
-          new_master_third_commit = monorepo.import_commit(
-            repo_b.branch('master').topologically_ordered_commits_from_root[1],
-            new_parents: [new_master_second_commit],
+          new_main_third_commit = monorepo.import_commit(
+            repo_b.branch('main').topologically_ordered_commits_from_root[1],
+            new_parents: [new_main_second_commit],
             subdirectory: 'repo_b'
           )
 
-          new_master_last_commit = monorepo.import_commit(
-            repo_a.branch('master').topologically_ordered_commits_from_root[2],
-            new_parents: [new_master_third_commit, new_feature_commit],
+          new_main_last_commit = monorepo.import_commit(
+            repo_a.branch('main').topologically_ordered_commits_from_root[2],
+            new_parents: [new_main_third_commit, new_feature_commit],
             subdirectory: 'repo_a'
           )
 
-          monorepo.create_or_update_branch('master', commit_id: new_master_last_commit.id)
+          monorepo.create_or_update_branch('main', commit_id: new_main_last_commit.id)
         end
 
         it 'creates a commit with proper contents even outside of the specified subdirectory' do
           Dir.chdir(monorepo.path) do
-            git('switch --discard-changes master')
+            git('switch --discard-changes main')
             git('clean --force -d -x')
 
             expect(files('**/*')).to eq(
