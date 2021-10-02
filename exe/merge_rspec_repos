@@ -15,13 +15,15 @@ def main
   Dir.mkdir(dest_dir) unless Dir.exist?(dest_dir)
   Dir.chdir(dest_dir)
 
-  original_repo_paths = fetch_original_repos_if_needed
-  monorepo_path = create_monorepo_if_needed
+  configuration = RepositoryMerger::Configuration.new(
+    original_repo_paths: fetch_original_repos_if_needed,
+    monorepo_path: create_monorepo_if_needed
+  )
 
-  repo_merger = RepositoryMerger.new(original_repo_paths, monorepo_path: monorepo_path)
-
-  all_branch_names = repo_merger.configuration.original_repos.flat_map { |repo| repo.branches.map(&:name) }.uniq.sort
+  all_branch_names = configuration.original_repos.flat_map { |repo| repo.branches.map(&:name) }.uniq.sort
   target_branch_names = ['origin/main'] + all_branch_names.grep(/\Aorigin\/\d+-\d+-maintenance\z/)
+
+  repo_merger = RepositoryMerger.new(configuration)
 
   repo_merger.merge_branches(
     target_branch_names,
@@ -42,7 +44,7 @@ def main
     end
   )
 
-  Dir.chdir(monorepo_path) do
+  Dir.chdir(configuration.monorepo_path) do
     # Clear index and working tree since they're cluttered after the merge
     `git reset --hard`
 

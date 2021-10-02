@@ -24,24 +24,28 @@ RSpec.describe RepositoryMerger do
     log.split("\n")
   end
 
+  subject(:repo_merger) do
+    RepositoryMerger.new(configuration)
+  end
+
+  let(:configuration) do
+    RepositoryMerger::Configuration.new(
+      original_repo_paths: [repo_a_path, repo_b_path],
+      monorepo_path: monorepo_path,
+      commit_map_file_path: nil,
+      log_output: log_output
+    )
+  end
+
+  let(:monorepo_path) do
+    git_init('monorepo')
+  end
+
+  let(:log_output) do
+    StringIO.new
+  end
+
   describe '#merge_branches' do
-    let(:repo_merger) do
-      RepositoryMerger.new(
-        [repo_a_path, repo_b_path],
-        monorepo_path: monorepo_path,
-        commit_map_file_path: nil,
-        log_output: log_output
-      )
-    end
-
-    let(:monorepo_path) do
-      git_init('monorepo')
-    end
-
-    let(:log_output) do
-      StringIO.new
-    end
-
     let(:commit_message_transformer) do
       proc do |original_commit|
         "[#{original_commit.repo.name}] #{original_commit.message}"
@@ -417,19 +421,6 @@ RSpec.describe RepositoryMerger do
   end
 
   describe '#import_tags' do
-    let(:repo_merger) do
-      RepositoryMerger.new(
-        [repo_a_path, repo_b_path],
-        monorepo_path: monorepo_path,
-        commit_map_file_path: nil,
-        log_output: log_output
-      )
-    end
-
-    let(:log_output) do
-      StringIO.new
-    end
-
     let(:commit_message_transformer) do
       proc do |original_commit|
         "[#{original_commit.repo.name}] #{original_commit.message}"

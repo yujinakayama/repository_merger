@@ -7,13 +7,8 @@ require_relative 'repository_merger/tag_importer'
 class RepositoryMerger
   attr_reader :configuration
 
-  def initialize(original_repo_paths, monorepo_path:, commit_map_file_path: 'commit_map.json', log_output: $stdout)
-    @configuration = Configuration.new(
-      original_repo_paths: original_repo_paths,
-      monorepo_path: monorepo_path,
-      commit_map_file_path: commit_map_file_path,
-      log_output: log_output
-    )
+  def initialize(configuration)
+    @configuration = configuration
   end
 
   def merge_branches(branch_names, commit_message_transformer: nil)
