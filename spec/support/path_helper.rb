@@ -10,4 +10,8 @@ module PathHelper
   def tmp_path
     project_root_path.join('tmp')
   end
+
+  def dest_path
+    project_root_path.join('dest')
+  end
 end

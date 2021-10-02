@@ -1,14 +1,12 @@
 require 'digest'
 require 'find'
 
-base_directory = "dest/#{`git rev-parse --abbrev-ref HEAD`.chomp}/original_repos"
-
-RSpec.describe 'original RSpec repositories', if: Dir.exist?(base_directory) do
+RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_path.join('original_repos')) do
   include FileHelper
   include GitHelper
 
   around do |example|
-    Dir.chdir(base_directory) do
+    Dir.chdir(PathHelper.dest_path.join('original_repos')) do
       example.run
     end
   end

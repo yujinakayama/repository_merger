@@ -1,14 +1,12 @@
 require 'digest'
 require 'find'
 
-destination_directory = "dest/#{`git rev-parse --abbrev-ref HEAD`.chomp}"
-
-RSpec.describe 'merged RSpec monorepo', if: Dir.exist?("#{destination_directory}/monorepo") do
+RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join('monorepo')) do
   include FileHelper
   include GitHelper
 
   around do |example|
-    Dir.chdir(destination_directory) do
+    Dir.chdir(PathHelper.dest_path) do
       example.run
     end
   end

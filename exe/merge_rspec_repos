@@ -3,7 +3,6 @@
 
 require 'bundler/setup'
 require_relative '../lib/repository_merger'
-require 'fileutils'
 require 'pry'
 
 def main
@@ -12,7 +11,9 @@ def main
     exit(1)
   end
 
-  Dir.chdir(dest_directory_path)
+  dest_dir = 'dest'
+  Dir.mkdir(dest_dir) unless Dir.exist?(dest_dir)
+  Dir.chdir(dest_dir)
 
   original_repo_paths = fetch_original_repos_if_needed
   monorepo_path = create_monorepo_if_needed
@@ -49,13 +50,6 @@ def main
     puts 'Running `git gc`...'
     system('git gc')
   end
-end
-
-def dest_directory_path
-  repository_merger_branch_name = `git rev-parse --abbrev-ref HEAD`.chomp
-  path = "dest/#{repository_merger_branch_name}"
-  FileUtils.mkdir_p(path)
-  path
 end
 
 def fetch_original_repos_if_needed
