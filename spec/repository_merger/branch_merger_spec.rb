@@ -43,7 +43,7 @@ class RepositoryMerger
     end
 
     let(:commit_map_file_path) do
-      File.join(PathHelper.tmp_path, 'commit_map.json')
+      PathHelper.tmp_path.join('commit_map.json')
     end
 
     before do

@@ -4,10 +4,10 @@ module PathHelper
   module_function
 
   def project_root_path
-    File.expand_path('../..', __dir__)
+    Pathname.new(File.expand_path('../..', __dir__))
   end
 
   def tmp_path
-    File.join(project_root_path, 'tmp')
+    project_root_path.join('tmp')
   end
 end

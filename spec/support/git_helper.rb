@@ -65,7 +65,7 @@ module GitHelper
   end
 
   def git_init(repo_name)
-    repo_path = File.join(PathHelper.tmp_path, repo_name)
+    repo_path = PathHelper.tmp_path.join(repo_name)
 
     FileUtils.rm_rf(repo_path)
     FileUtils.mkdir_p(repo_path)

@@ -12,6 +12,6 @@ module FixtureHelper
   end
 
   def rspec_core_repo_path
-    File.join(PathHelper.tmp_path, 'rspec-core')
+    PathHelper.tmp_path.join('rspec-core')
   end
 end
