@@ -705,16 +705,6 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
             commit_ids_in(repo_path, 'origin/main')
           end
 
-          def skip_if_ref_does_not_exist
-            yield
-          rescue GitHelper::GitError => error
-            if error.message.include?('bad revision')
-              skip 'ref does not exist'
-            else
-              raise error
-            end
-          end
-
           if expected_results[:orphan] == true
             it 'is an orphan ref which shares no commits with main branch' do
               expect(target_ref_commit_ids & main_branch_commit_ids).to be_empty
