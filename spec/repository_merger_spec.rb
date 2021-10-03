@@ -47,7 +47,7 @@ RSpec.describe RepositoryMerger do
     StringIO.new
   end
 
-  describe '#' do
+  describe '#merge_commit_history_of_branches_named' do
     let(:commit_message_conversion) do
       proc do |original_commit|
         "[#{original_commit.repo.name}] #{original_commit.message}"
