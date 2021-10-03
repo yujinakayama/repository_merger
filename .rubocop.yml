@@ -1,2 +1,10 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  Exclude:
+    - 'dest/**/*'
+    - 'tmp/**/*'
+  NewCops: enable
+
 Layout/HashAlignment:
   EnforcedHashRocketStyle: table
