@@ -4,36 +4,34 @@ require_relative 'branch_local_commit_map'
 require_relative 'commit'
 
 class RepositoryMerger
-  class BranchMerger
-    attr_reader :configuration, :original_branch_name, :commit_message_transformer, :progress_title
+  class CommitHistoryMerger
+    attr_reader :configuration, :original_references, :commit_message_transformer, :progress_title
     attr_accessor :wants_to_abort
 
-    def initialize(configuration:, branch_name:, commit_message_transformer: nil, progress_title: nil)
+    def initialize(configuration:, references:, commit_message_transformer: nil, progress_title: nil)
       @configuration = configuration
-      @original_branch_name = branch_name
+      @original_references = references
       @commit_message_transformer = commit_message_transformer
       @progress_title = progress_title
     end
 
     def run
-      logger.verbose("Importing Commits for #{monorepo_original_branch_name}", title: true)
       logger.start_tracking_progress_for('commits', total: unprocessed_original_commit_queue.size, title: progress_title)
 
       while (original_commit = unprocessed_original_commit_queue.next)
         process_commit(original_commit)
         break if wants_to_abort
       end
-    ensure
-      if monorepo_branch_head_commit
-        monorepo.create_or_update_branch(monorepo_original_branch_name, commit_id: monorepo_branch_head_commit.id)
-      end
 
+      monorepo_head_commit
+    ensure
       repo_commit_map.merge!(branch_local_commit_map)
+      repo_commit_map.save if repo_commit_map.path
     end
 
     private
 
-    attr_reader :monorepo_branch_head_commit
+    attr_reader :monorepo_head_commit
 
     def process_commit(original_commit)
       logger.verbose "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
@@ -50,7 +48,7 @@ class RepositoryMerger
       )
 
       if mainline?(original_commit)
-        @monorepo_branch_head_commit = monorepo_commit
+        @monorepo_head_commit = monorepo_commit
       end
 
       logger.increment_progress
@@ -81,12 +79,12 @@ class RepositoryMerger
 
     def parent_commits_in_monorepo_for(original_commit)
       if original_commit.root?
-        return [monorepo_branch_head_commit].compact
+        return [monorepo_head_commit].compact
       end
 
       original_commit.parents.map do |original_parent_commit|
         if mainline?(original_commit) && mainline?(original_parent_commit)
-          monorepo_branch_head_commit
+          monorepo_head_commit
         else
           branch_local_commit_map.monorepo_commit_for(original_parent_commit)
         end
@@ -94,8 +92,8 @@ class RepositoryMerger
     end
 
     def mainline?(original_commit)
-      original_branch = original_branches_by_repo[original_commit.repo]
-      original_branch.mainline?(original_commit)
+      original_reference = original_references_by_repo[original_commit.repo]
+      original_reference.mainline?(original_commit)
     end
 
     def commit_message_from(original_commit)
@@ -106,29 +104,14 @@ class RepositoryMerger
       end
     end
 
-    def monorepo_original_branch_name
-      @monorepo_original_branch_name ||= original_branches.first.local_name
-    end
-
     def unprocessed_original_commit_queue
-      @unprocessed_original_commit_queue ||= OriginalCommitQueue.new(
-        repos: original_repos,
-        original_branch_name: original_branch_name
-      )
+      @unprocessed_original_commit_queue ||= OriginalCommitQueue.new(original_references)
     end
 
-    def original_branches_by_repo
-      @original_branches_by_repo ||= original_branches.each_with_object({}) do |original_branch, hash|
-        hash[original_branch.repo] = original_branch
+    def original_references_by_repo
+      @original_references_by_repo ||= original_references.each_with_object({}) do |original_reference, hash|
+        hash[original_reference.repo] = original_reference
       end
-    end
-
-    def original_branches
-      original_repos.map { |repo| repo.branch(original_branch_name) }.compact
-    end
-
-    def original_repos
-      configuration.original_repos
     end
 
     def monorepo
@@ -148,11 +131,10 @@ class RepositoryMerger
     end
 
     class OriginalCommitQueue
-      attr_reader :repos, :original_branch_name
+      attr_reader :references
 
-      def initialize(repos:, original_branch_name:)
-        @repos = repos
-        @original_branch_name = original_branch_name
+      def initialize(references)
+        @references = references
       end
 
       def next
@@ -165,11 +147,7 @@ class RepositoryMerger
       end
 
       def commit_queues
-        @commit_queues ||= target_branches.map(&:topologically_ordered_commits_from_root).map(&:dup)
-      end
-
-      def target_branches
-        repos.map { |repo| repo.branch(original_branch_name) }.compact
+        @commit_queues ||= references.map(&:topologically_ordered_commits_from_root).map(&:dup)
       end
     end
   end

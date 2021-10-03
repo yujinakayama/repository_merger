@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
+require_relative 'reference'
+
 class RepositoryMerger
   Tag = Struct.new(:rugged_tag, :repo) do
+    include Reference
+
     def name
       rugged_tag.name
     end
@@ -29,10 +33,6 @@ class RepositoryMerger
 
     def id
       name
-    end
-
-    def rugged_repo
-      repo.rugged_repo
     end
 
     def revision_id

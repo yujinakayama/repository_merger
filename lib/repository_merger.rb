@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'repository_merger/branch_merger'
+require_relative 'repository_merger/commit_history_merger'
 require_relative 'repository_merger/configuration'
 require_relative 'repository_merger/tag_importer'
 
@@ -11,17 +11,22 @@ class RepositoryMerger
     @configuration = configuration
   end
 
-  def merge_branches(branch_name, commit_message_transformer: nil, progress_title: nil)
-    branch_merger = BranchMerger.new(
+  def merge_commit_history_of_branches_named(original_branch_name, commit_message_transformer: nil, progress_title: nil)
+    original_branches = configuration.original_repos.map { |repo| repo.branch(original_branch_name) }.compact
+
+    commit_history_merger = CommitHistoryMerger.new(
       configuration: configuration,
-      branch_name: branch_name,
+      references: original_branches,
       commit_message_transformer: commit_message_transformer,
       progress_title: progress_title
     )
 
-    branch_merger.run
-  ensure
-    configuration.repo_commit_map.save if configuration.repo_commit_map.path
+    monorepo_head_commit = commit_history_merger.run
+
+    if monorepo_head_commit
+      monorepo_branch_name = original_branches.first.local_name
+      configuration.monorepo.create_or_update_branch(monorepo_branch_name, commit_id: monorepo_head_commit.id)
+    end
   end
 
   def import_tags(tag_name_transformer:)

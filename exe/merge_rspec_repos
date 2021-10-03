@@ -28,7 +28,7 @@ def main
   repo_merger = RepositoryMerger.new(configuration)
 
   target_branch_names.each_with_index do |branch_name, index|
-    repo_merger.merge_branches(
+    repo_merger.merge_commit_history_of_branches_named(
       branch_name,
       progress_title: "[#{index + 1}/#{target_branch_names.size} branches: #{branch_name}]",
       commit_message_transformer: proc do |original_commit|

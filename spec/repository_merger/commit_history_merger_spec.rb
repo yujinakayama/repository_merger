@@ -4,7 +4,7 @@ require 'repository_merger'
 require 'stringio'
 
 class RepositoryMerger
-  RSpec.describe BranchMerger do
+  RSpec.describe CommitHistoryMerger do
     include GitHelper
 
     def with_git_time(time, &block)
@@ -19,14 +19,14 @@ class RepositoryMerger
       git_graph(repo_path, format: '%ci %s%d')
     end
 
-    subject(:branch_merger) do
-      create_branch_merger
-    end
+    def create_commit_history_merger
+      configuration = create_configuration
 
-    def create_branch_merger
-      BranchMerger.new(
-        configuration: create_configuration,
-        branch_name: 'main',
+      original_branches = configuration.original_repos.map { |repo| repo.branch('main') }.compact
+
+      CommitHistoryMerger.new(
+        configuration: configuration,
+        references: original_branches,
         commit_message_transformer: commit_message_transformer
       )
     end
@@ -79,40 +79,41 @@ class RepositoryMerger
       end
 
       before do
-        previous_branch_merger = create_branch_merger
+        previous_commit_history_merger = create_commit_history_merger
 
         imported_commit_count = 0
 
-        allow(previous_branch_merger).to receive(:process_commit).and_wrap_original do |original_method, commit|
+        allow(previous_commit_history_merger).to receive(:process_commit).and_wrap_original do |original_method, commit|
           original_method.call(commit)
           imported_commit_count += 1
-          previous_branch_merger.wants_to_abort = true if imported_commit_count == 3
+          previous_commit_history_merger.wants_to_abort = true if imported_commit_count == 3
         end
 
-        previous_branch_merger.run
+        monorepo_head_commit = previous_commit_history_merger.run
 
-        expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
-          * 2020-01-01 00:01:00 +0000 [repo_a] main 2 (HEAD -> main)
+        expect(commit_graph_of(monorepo_head_commit)).to eq(<<~'END')
+          * 2020-01-01 00:01:00 +0000 [repo_a] main 2
           * 2020-01-01 00:00:10 +0000 [repo_b] main 1
           * 2020-01-01 00:00:00 +0000 [repo_a] main 1
         END
 
-        previous_branch_merger.configuration.repo_commit_map.save
+        previous_commit_history_merger.configuration.repo_commit_map.save
         expect(File.exist?(commit_map_file_path)).to be true
       end
 
       it 'properly imports only subsequent commits without creating duplicates' do
-        branch_merger.run
+        commit_history_merger = create_commit_history_merger
+        monorepo_head_commit = commit_history_merger.run
 
-        expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
-          * 2020-01-01 00:02:00 +0000 [repo_a] main 3 (HEAD -> main)
+        expect(commit_graph_of(monorepo_head_commit)).to eq(<<~'END')
+          * 2020-01-01 00:02:00 +0000 [repo_a] main 3
           * 2020-01-01 00:01:10 +0000 [repo_b] main 2
           * 2020-01-01 00:01:00 +0000 [repo_a] main 2
           * 2020-01-01 00:00:10 +0000 [repo_b] main 1
           * 2020-01-01 00:00:00 +0000 [repo_a] main 1
         END
 
-        expect(branch_merger.configuration.repo_commit_map.map.values).to all have_attributes(size: 1)
+        expect(commit_history_merger.configuration.repo_commit_map.map.values).to all have_attributes(size: 1)
       end
     end
   end
