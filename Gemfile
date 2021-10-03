@@ -7,8 +7,6 @@ gem 'ruby-progressbar'
 group :development do
   gem 'pry-byebug'
   gem 'rake'
-end
-
-group :test do
   gem 'rspec'
+  gem 'rubocop'
 end
