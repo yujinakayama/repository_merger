@@ -2,9 +2,10 @@
 
 class RepositoryMerger
   class TagImporter
-    attr_reader :configuration, :tag_name_transformer
+    attr_reader :original_tags, :configuration, :tag_name_transformer
 
-    def initialize(configuration:, tag_name_transformer:)
+    def initialize(tags, configuration:, tag_name_transformer:)
+      @original_tags = tags
       @configuration = configuration
       @tag_name_transformer = tag_name_transformer
     end
@@ -56,14 +57,6 @@ class RepositoryMerger
     def monorepo_commit_id_for(original_tag)
       # TODO: Choosing the first one might be wrong
       configuration.repo_commit_map.monorepo_commit_ids_for(original_tag.target_commit).first
-    end
-
-    def original_tags
-      @original_tags ||= original_repos.flat_map(&:tags)
-    end
-
-    def original_repos
-      configuration.original_repos
     end
 
     def monorepo
