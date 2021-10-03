@@ -11,7 +11,7 @@ class RepositoryMerger
       repo == other.repo && canonical_name == other.canonical_name
     end
 
-    alias eql? ==
+    alias_method :eql?, :==
 
     def hash
       repo.hash ^ name.hash

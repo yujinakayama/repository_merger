@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'repository_merger/repository'
 
 class RepositoryMerger
@@ -93,36 +95,36 @@ class RepositoryMerger
       # * a3f941f4 Initial commit to rspec-core.
       it 'returns topologically ordered commits of the branch from root' do
         expect(commits.first(30).map { |commit| commit.message.chomp }).to eq([
-          "Initial commit to rspec-core.",
-          "Version bump to 0.0.0",
-          "Initial jeweler repository creation",
-          "Correcting the spelling of my name",
-          "Adding in gemspec",
-          "Initial migration of Micronaut to Spec/Core",
-          "Adding in a script/console for local work",
-          "Updating the coverage rake task to correctly allow the spec folder",
-          "Adding a treasure map to enable beholder support",
-          "Removing an errant print statement",
-          "Adding bin/rspec for simple CLI runner",
-          "use spec-expectations and add hook for spec-mocks",
-          "add pending features from rspec",
-          "ignore tmp",
-          "Alias example as specify",
-          "Aliasing context to describe",
-          "Adding a TODO",
-          "Fixing the coverage task for the current setup",
-          "Spec->Rspec.   Refactoring complete",
-          "Changing rcov task :coverage to :rcov, to bring unity to the projects rake tasks",
-          "all failures are just failures",
+          'Initial commit to rspec-core.',
+          'Version bump to 0.0.0',
+          'Initial jeweler repository creation',
+          'Correcting the spelling of my name',
+          'Adding in gemspec',
+          'Initial migration of Micronaut to Spec/Core',
+          'Adding in a script/console for local work',
+          'Updating the coverage rake task to correctly allow the spec folder',
+          'Adding a treasure map to enable beholder support',
+          'Removing an errant print statement',
+          'Adding bin/rspec for simple CLI runner',
+          'use spec-expectations and add hook for spec-mocks',
+          'add pending features from rspec',
+          'ignore tmp',
+          'Alias example as specify',
+          'Aliasing context to describe',
+          'Adding a TODO',
+          'Fixing the coverage task for the current setup',
+          'Spec->Rspec.   Refactoring complete',
+          'Changing rcov task :coverage to :rcov, to bring unity to the projects rake tasks',
+          'all failures are just failures',
           "Merge branch 'master' of git@github.com:rspec/core",
           "Merge branch 'master' of git@github.com:rspec/core",
           "Merge branch 'master' of git@github.com:rspec/core",
-          "Adding in deprecation as Rspec::Core.deprecate",
-          "Spec > Rspec in mock adapter for rspec",
+          'Adding in deprecation as Rspec::Core.deprecate',
+          'Spec > Rspec in mock adapter for rspec',
           "Merge branch 'master' of git@github.com:rspec/core",
-          "Now with 100% more functionality in Rspec::Core.warn/deprecate",
-          "Spec to Rspec",
-          "more S2R"
+          'Now with 100% more functionality in Rspec::Core.warn/deprecate',
+          'Spec to Rspec',
+          'more S2R'
         ])
       end
     end

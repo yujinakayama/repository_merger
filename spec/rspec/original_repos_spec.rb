@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'digest'
 require 'find'
 
@@ -150,7 +152,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
       'v3.7.0'                  => { exist: true, orphan: false },
       'v3.8.0'                  => { exist: true, orphan: false },
       'v3.9.0'                  => { exist: true, orphan: false },
-      'v3.10.0'                 => { exist: true, orphan: false },
+      'v3.10.0'                 => { exist: true, orphan: false }
     },
     'rspec-core' => {
       'origin/main'             => { exist: true, orphan: false },
@@ -321,7 +323,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
       'v3.9.2'                  => { exist: true, orphan: false },
       'v3.9.3'                  => { exist: true, orphan: false },
       'v3.10.0'                 => { exist: true, orphan: false },
-      'v3.10.1'                 => { exist: true, orphan: false },
+      'v3.10.1'                 => { exist: true, orphan: false }
     },
     'rspec-expectations' => {
       'origin/main'             => { exist: true, orphan: false },
@@ -464,7 +466,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
       'v3.9.3'                  => { exist: true, orphan: false },
       'v3.9.4'                  => { exist: true, orphan: false },
       'v3.10.0'                 => { exist: true, orphan: false },
-      'v3.10.1'                 => { exist: true, orphan: false },
+      'v3.10.1'                 => { exist: true, orphan: false }
     },
     'rspec-mocks' => {
       'origin/main'             => { exist: true, orphan: false },
@@ -620,7 +622,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
       'v3.9.1'                  => { exist: true, orphan: false },
       'v3.10.0'                 => { exist: true, orphan: false },
       'v3.10.1'                 => { exist: true, orphan: false },
-      'v3.10.2'                 => { exist: true, orphan: false },
+      'v3.10.2'                 => { exist: true, orphan: false }
     },
     'rspec-support' => {
       'origin/main'             => { exist: true, orphan: false },
@@ -672,7 +674,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
       'v3.9.4'                  => { exist: true, orphan: false },
       'v3.10.0'                 => { exist: true, orphan: false },
       'v3.10.1'                 => { exist: true, orphan: false },
-      'v3.10.2'                 => { exist: true, orphan: false },
+      'v3.10.2'                 => { exist: true, orphan: false }
     }
   }.each do |repo_name, refs|
     describe repo_name do

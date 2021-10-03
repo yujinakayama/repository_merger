@@ -6,14 +6,14 @@ class RepositoryMerger
     AbsoluteReference = Struct.new(:username, :repo_name, :issue_number, keyword_init: true)
 
     # https://github.com/isiahmeadows/github-limits
-    USERNAME_PATTERN = /(?<username>[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38})/i
-    REPOSITORY_NAME_PATTERN = /(?<repo_name>[a-z0-9\.\-_]{1,100})/i
-    ISSUE_NUMBER_PATTERN = /(?<issue_number>\d{1,5})/ # Technically max is 1073741824 but it won't exist in real life
+    USERNAME_PATTERN = /(?<username>[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38})/i.freeze
+    REPOSITORY_NAME_PATTERN = /(?<repo_name>[a-z0-9.\-_]{1,100})/i.freeze
+    ISSUE_NUMBER_PATTERN = /(?<issue_number>\d{1,5})/.freeze # Technically max is 1073741824 but it won't exist in real life
 
     # https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/autolinked-references-and-urls#issues-and-pull-requests
-    REPO_LOCAL_REFERENCE_PATTERN = /(?<!\w)(?<repo_local_reference>(?:#|GH-)#{ISSUE_NUMBER_PATTERN})(?!\w)/i
-    ABSOLUTE_REFERENCE_PATTERN = /(?<!\w)(?<absolute_reference>#{USERNAME_PATTERN}\/#{REPOSITORY_NAME_PATTERN}##{ISSUE_NUMBER_PATTERN})(?!\w)/
-    REFERENCE_PATTERN = /(?:#{REPO_LOCAL_REFERENCE_PATTERN}|#{ABSOLUTE_REFERENCE_PATTERN})/
+    REPO_LOCAL_REFERENCE_PATTERN = /(?<!\w)(?<repo_local_reference>(?:#|GH-)#{ISSUE_NUMBER_PATTERN})(?!\w)/i.freeze
+    ABSOLUTE_REFERENCE_PATTERN = /(?<!\w)(?<absolute_reference>#{USERNAME_PATTERN}\/#{REPOSITORY_NAME_PATTERN}##{ISSUE_NUMBER_PATTERN})(?!\w)/.freeze
+    REFERENCE_PATTERN = /(?:#{REPO_LOCAL_REFERENCE_PATTERN}|#{ABSOLUTE_REFERENCE_PATTERN})/.freeze
 
     def self.extract_references_from(message)
       references = []

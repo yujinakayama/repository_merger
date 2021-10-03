@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'repository_merger/repository'
 
 class RepositoryMerger
@@ -18,7 +20,6 @@ class RepositoryMerger
             message: "rename method and avoid collision with 'assignments'\n"
           )
         end
-
       end
 
       context 'with an annotated tag' do

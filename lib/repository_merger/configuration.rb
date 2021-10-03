@@ -26,7 +26,7 @@ class RepositoryMerger
     end
 
     def repo_commit_map
-      @commit_map ||= RepositoryCommitMap.new(path: commit_map_file_path, monorepo: monorepo)
+      @repo_commit_map ||= RepositoryCommitMap.new(path: commit_map_file_path, monorepo: monorepo)
     end
 
     def logger

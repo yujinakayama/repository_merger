@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'repository_merger'
 require 'stringio'
 

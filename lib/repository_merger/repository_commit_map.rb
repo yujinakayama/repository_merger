@@ -11,7 +11,7 @@ class RepositoryMerger
 
     attr_reader :path, :monorepo
 
-    def initialize(path: nil, monorepo:)
+    def initialize(monorepo:, path: nil)
       @path = path
       @monorepo = monorepo
     end

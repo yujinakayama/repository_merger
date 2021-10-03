@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative 'repository'
 require 'rugged'
 
@@ -89,7 +90,7 @@ class RepositoryMerger
         committer: original_rugged_commit.committer,
         author: original_rugged_commit.author,
         tree: empty_commit_for_debug? ? empty_tree.oid : rugged_repo.index.write_tree,
-        parents: new_parent_ids,
+        parents: new_parent_ids
       })
 
       @current_checked_out_commit_id = new_commit_id

@@ -1,2 +1,29 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  Exclude:
+    - 'dest/**/*'
+    - 'tmp/**/*'
+    - 'vendor/**/*'
+  NewCops: enable
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
 Layout/HashAlignment:
   EnforcedHashRocketStyle: table
+
+Naming/HeredocDelimiterNaming:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/EmptyElse:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false

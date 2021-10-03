@@ -31,7 +31,7 @@ class RepositoryMerger
           logger.verbose "    Imported as #{new_tag_name.inspect}." if new_tag
         end
       else
-        logger.verbose "    Not for import. Skipping."
+        logger.verbose '    Not for import. Skipping.'
       end
 
       logger.increment_progress
