@@ -1,19 +1,17 @@
 # frozen_string_literal: true
 
-require 'ruby-progressbar'
-
 class RepositoryMerger
   class TagImporter
-    attr_reader :configuration, :tag_name_transformer, :progressbar
+    attr_reader :configuration, :tag_name_transformer
 
     def initialize(configuration:, tag_name_transformer:)
       @configuration = configuration
       @tag_name_transformer = tag_name_transformer
-      @progressbar = create_progressbar
     end
 
     def run
-      progressbar.log "Importing tags from #{original_repos.map(&:name).join(', ')} into #{monorepo.path}..."
+      logger.verbose('Importing Tags', title: true)
+      logger.start_tracking_progress_for('tags', total: original_tags.size)
 
       original_tags.each do |original_tag|
         process_tag(original_tag)
@@ -21,31 +19,31 @@ class RepositoryMerger
     end
 
     def process_tag(original_tag)
-      progressbar.log "  [#{original_tag.repo.name}] #{original_tag.name}"
+      logger.verbose "  [#{original_tag.repo.name}] #{original_tag.name}"
 
       new_tag_name = tag_name_transformer.call(original_tag)
 
       if new_tag_name
         if monorepo.tag(new_tag_name)
-          progressbar.log "    The new tag #{new_tag_name.inspect} is already imported. Skipping."
+          logger.verbose "    Already imported as #{new_tag_name.inspect}. Skipping."
         else
-          progressbar.log "    Importing as #{new_tag_name.inspect}."
-          import_tag_into_monorepo(original_tag, new_tag_name: new_tag_name)
+          new_tag = import_tag_into_monorepo(original_tag, new_tag_name: new_tag_name)
+          logger.verbose "    Imported as #{new_tag_name.inspect}." if new_tag
         end
       else
-        progressbar.log "    Not for import. Skipping."
+        logger.verbose "    Not for import. Skipping."
       end
 
-      progressbar.increment
+      logger.increment_progress
     end
 
     def import_tag_into_monorepo(original_tag, new_tag_name:)
       target_commit_id_in_monorepo = monorepo_commit_id_for(original_tag)
 
       unless target_commit_id_in_monorepo
-        commit_description = "#{original_tag.target_commit.message.chomp.inspect} (#{original_tag.target_commit.id[0, 7]}) in #{original_tag.repo.name}"
-        progressbar.log "    The target commit #{commit_description} is not yet imported. Skipping."
-        return
+        commit_description = "#{original_tag.target_commit.message.chomp.inspect} (#{original_tag.target_commit.abbreviated_id}) in #{original_tag.repo.name}"
+        logger.verbose "    The target commit #{commit_description} is not yet imported. Skipping."
+        return nil
       end
 
       monorepo.import_tag(
@@ -72,16 +70,8 @@ class RepositoryMerger
       configuration.monorepo
     end
 
-    def create_progressbar
-      # 185/407 tags |====== 45 ======>                    |  ETA: 00:00:04
-      # %c / %C      |       %w       >         %i         |       %e
-      bar_format = " %c/%C tags |%w>%i| %e "
-
-      ProgressBar.create(
-        format: bar_format,
-        output: configuration.log_output,
-        total: original_tags.size
-      )
+    def logger
+      configuration.logger
     end
   end
 end

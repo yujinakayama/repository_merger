@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
-require 'ruby-progressbar'
 require_relative 'branch_local_commit_map'
 require_relative 'commit'
 
 class RepositoryMerger
   class BranchMerger
-    attr_reader :configuration, :target_branch_name, :commit_message_transformer, :progressbar
+    attr_reader :configuration, :target_branch_name, :commit_message_transformer, :progress_title
     attr_accessor :wants_to_abort
 
-    def initialize(configuration:, target_branch_name:, commit_message_transformer: nil, progressbar_title: nil)
+    def initialize(configuration:, target_branch_name:, commit_message_transformer: nil, progress_title: nil)
       @configuration = configuration
       @target_branch_name = target_branch_name
       @commit_message_transformer = commit_message_transformer
-      @progressbar = create_progressbar(progressbar_title)
+      @progress_title = progress_title
     end
 
     def run
-      progressbar.log "Merging `#{target_branch_name}` branches of #{original_branches.map { |original_branch| original_branch.repo.name }.join(', ')} into `#{branch_name_in_monorepo}` branch of #{monorepo.path}..."
+      logger.verbose("Importing Commits for #{monorepo_branch_name}", title: true)
+      logger.start_tracking_progress_for('commits', total: unprocessed_original_commit_queue.size, title: progress_title)
 
       while (original_commit = unprocessed_original_commit_queue.next)
         process_commit(original_commit)
@@ -25,7 +25,7 @@ class RepositoryMerger
       end
     ensure
       if monorepo_branch_head_commit
-        monorepo.create_or_update_branch(branch_name_in_monorepo, commit_id: monorepo_branch_head_commit.id)
+        monorepo.create_or_update_branch(monorepo_branch_name, commit_id: monorepo_branch_head_commit.id)
       end
 
       repo_commit_map.merge!(branch_local_commit_map)
@@ -36,10 +36,10 @@ class RepositoryMerger
     attr_reader :monorepo_branch_head_commit
 
     def process_commit(original_commit)
-      progressbar.log "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
+      logger.verbose "  #{original_commit.commit_time} [#{original_commit.repo.name}] #{original_commit.message.each_line.first}"
 
       if (monorepo_commit = already_imported_monorepo_commit_for(original_commit))
-        progressbar.log "    Already imported. #{monorepo_commit.id[0,7]}"
+        logger.verbose "    Already imported as #{monorepo_commit.abbreviated_id}. Skipping."
       else
         monorepo_commit = import_commit_into_monorepo(original_commit)
       end
@@ -53,7 +53,7 @@ class RepositoryMerger
         @monorepo_branch_head_commit = monorepo_commit
       end
 
-      progressbar.increment
+      logger.increment_progress
     end
 
     def already_imported_monorepo_commit_for(original_commit)
@@ -74,7 +74,7 @@ class RepositoryMerger
         message: commit_message_from(original_commit)
       )
 
-      progressbar.log("    Created commit #{new_commit_in_monorepo.id[0,7]}, parents: #{parent_commits_in_monorepo.map { |commit| commit.id[0,7] }}, mainline: #{mainline?(original_commit)}")
+      logger.verbose "    Created commit #{new_commit_in_monorepo.abbreviated_id}."
 
       new_commit_in_monorepo
     end
@@ -106,12 +106,8 @@ class RepositoryMerger
       end
     end
 
-    def branch_in_monorepo
-      monorepo.branch(branch_name_in_monorepo)
-    end
-
-    def branch_name_in_monorepo
-      @branch_name_in_monorepo ||= original_branches.first.local_name
+    def monorepo_branch_name
+      @monorepo_branch_name ||= original_branches.first.local_name
     end
 
     def unprocessed_original_commit_queue
@@ -147,17 +143,8 @@ class RepositoryMerger
       @branch_local_commit_map ||= BranchLocalCommitMap.new(monorepo: monorepo)
     end
 
-    def create_progressbar(title)
-      # 185/407 commits |====== 45 ======>                    |  ETA: 00:00:04
-      # %c / %C         |       %w       >         %i         |       %e
-      bar_format = " %t %c/%C commits |%w>%i| %e "
-
-      ProgressBar.create(
-        format: bar_format,
-        output: configuration.log_output,
-        title: title,
-        total: unprocessed_original_commit_queue.size
-      )
+    def logger
+      configuration.logger
     end
 
     class OriginalCommitQueue

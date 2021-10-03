@@ -16,6 +16,10 @@ class RepositoryMerger
       rugged_commit.oid
     end
 
+    def abbreviated_id
+      id[0, 7]
+    end
+
     def message
       rugged_commit.message
     end
@@ -64,7 +68,7 @@ class RepositoryMerger
     end
 
     def inspect
-      "#<#{self.class} id=#{id[0,7]} repo=#{repo.name} message=#{message.each_line.first.chomp.inspect}>"
+      "#<#{self.class} id=#{abbreviated_id} repo=#{repo.name} message=#{message.each_line.first.chomp.inspect}>"
     end
 
     def pretty_print(pp)

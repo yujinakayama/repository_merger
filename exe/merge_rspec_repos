@@ -17,7 +17,8 @@ def main
 
   configuration = RepositoryMerger::Configuration.new(
     original_repo_paths: fetch_original_repos_if_needed,
-    monorepo_path: create_monorepo_if_needed
+    monorepo_path: create_monorepo_if_needed,
+    verbose_logging: ARGV.include?('-v')
   )
 
   all_branch_names = configuration.original_repos.flat_map { |repo| repo.branches.map(&:name) }.uniq.sort

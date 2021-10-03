@@ -17,7 +17,7 @@ class RepositoryMerger
         configuration: configuration,
         target_branch_name: target_branch_name,
         commit_message_transformer: commit_message_transformer,
-        progressbar_title: "#{index + 1}/#{branch_names.size} branches: #{target_branch_name}"
+        progress_title: "[#{index + 1}/#{branch_names.size} branches: #{target_branch_name}]"
       )
 
       branch_merger.run
