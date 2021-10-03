@@ -11,7 +11,7 @@ class RepositoryMerger
     end
 
     def run
-      logger.verbose('Importing Tags', title: true)
+      logger.verbose('Importing tags', title: true)
       logger.start_tracking_progress_for('tags', total: original_tags.size)
 
       original_tags.each do |original_tag|

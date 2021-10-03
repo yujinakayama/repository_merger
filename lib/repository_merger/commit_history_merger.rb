@@ -16,6 +16,7 @@ class RepositoryMerger
     end
 
     def run
+      logger.verbose("Importing commits from #{original_references.map { |ref| "#{ref.name} (#{ref.repo.name})" }.join(', ')}", title: true)
       logger.start_tracking_progress_for('commits', total: unprocessed_original_commit_queue.size, title: progress_title)
 
       while (original_commit = unprocessed_original_commit_queue.next)
@@ -40,6 +41,7 @@ class RepositoryMerger
         logger.verbose "    Already imported as #{monorepo_commit.abbreviated_id}. Skipping."
       else
         monorepo_commit = import_commit_into_monorepo(original_commit)
+        logger.verbose "    Created commit #{monorepo_commit.abbreviated_id}."
       end
 
       branch_local_commit_map.register(
@@ -65,16 +67,12 @@ class RepositoryMerger
     def import_commit_into_monorepo(original_commit)
       parent_commits_in_monorepo = parent_commits_in_monorepo_for(original_commit)
 
-      new_commit_in_monorepo = monorepo.import_commit(
+      monorepo.import_commit(
         original_commit,
         new_parents: parent_commits_in_monorepo,
         subdirectory: original_commit.repo.name,
         message: commit_message_from(original_commit)
       )
-
-      logger.verbose "    Created commit #{new_commit_in_monorepo.abbreviated_id}."
-
-      new_commit_in_monorepo
     end
 
     def parent_commits_in_monorepo_for(original_commit)
