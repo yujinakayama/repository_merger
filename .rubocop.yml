@@ -4,6 +4,7 @@ AllCops:
   Exclude:
     - 'dest/**/*'
     - 'tmp/**/*'
+    - 'vendor/**/*'
   NewCops: enable
 
 Layout/FirstArrayElementIndentation:
