@@ -5,7 +5,7 @@ require 'shellwords'
 module GitHelper
   class GitError < StandardError
     def initialize(command, stderr)
-      super("#{stderr.chomp} (#{command.shelljoin} in #{Dir.getwd})")
+      super("#{stderr.chomp} (`#{command.shelljoin}` in #{Dir.getwd})")
     end
   end
 
