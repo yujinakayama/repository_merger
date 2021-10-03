@@ -26,8 +26,8 @@ class RepositoryMerger
 
   def merge_commit_history_of(references, commit_message_conversion: nil, progress_title: nil)
     commit_history_merger = CommitHistoryMerger.new(
+      references,
       configuration: configuration,
-      references: references,
       commit_message_conversion: commit_message_conversion,
       progress_title: progress_title
     )

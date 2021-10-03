@@ -8,9 +8,9 @@ class RepositoryMerger
     attr_reader :configuration, :original_references, :commit_message_conversion, :progress_title
     attr_accessor :wants_to_abort
 
-    def initialize(configuration:, references:, commit_message_conversion: nil, progress_title: nil)
-      @configuration = configuration
+    def initialize(references, configuration:, commit_message_conversion: nil, progress_title: nil)
       @original_references = references
+      @configuration = configuration
       @commit_message_conversion = commit_message_conversion
       @progress_title = progress_title
     end

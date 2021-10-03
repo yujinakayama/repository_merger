@@ -25,8 +25,8 @@ class RepositoryMerger
       original_branches = configuration.original_repos.map { |repo| repo.branch('main') }.compact
 
       CommitHistoryMerger.new(
+        original_branches,
         configuration: configuration,
-        references: original_branches,
         commit_message_conversion: commit_message_conversion
       )
     end
