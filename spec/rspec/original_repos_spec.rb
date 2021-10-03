@@ -42,6 +42,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
   {
     'rspec' => {
       'origin/main'             => { exist: true, orphan: false },
+      'origin/2-0-stable'       => { exist: true, orphan: false },
       'origin/2-2-maintenance'  => { exist: true, orphan: false },
       'origin/2-3-maintenance'  => { exist: true, orphan: false },
       'origin/2-5-maintenance'  => { exist: true, orphan: false },
@@ -153,6 +154,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
     },
     'rspec-core' => {
       'origin/main'             => { exist: true, orphan: false },
+      'origin/2-0-stable'       => { exist: true, orphan: false },
       'origin/2-2-maintenance'  => { exist: true, orphan: false },
       'origin/2-3-maintenance'  => { exist: true, orphan: false },
       'origin/2-5-maintenance'  => { exist: true, orphan: false },
@@ -323,6 +325,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
     },
     'rspec-expectations' => {
       'origin/main'             => { exist: true, orphan: false },
+      'origin/2-0-stable'       => { exist: true, orphan: false },
       'origin/2-2-maintenance'  => { exist: true, orphan: false },
       'origin/2-3-maintenance'  => { exist: true, orphan: false },
       'origin/2-5-maintenance'  => { exist: true, orphan: false },
@@ -465,6 +468,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
     },
     'rspec-mocks' => {
       'origin/main'             => { exist: true, orphan: false },
+      'origin/2-0-stable'       => { exist: true, orphan: false },
       'origin/2-2-maintenance'  => { exist: true, orphan: false },
       'origin/2-3-maintenance'  => { exist: true, orphan: false },
       'origin/2-5-maintenance'  => { exist: true, orphan: false },
@@ -620,6 +624,7 @@ RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_pat
     },
     'rspec-support' => {
       'origin/main'             => { exist: true, orphan: false },
+      'origin/2-0-stable'       => { exist: false               },
       'origin/2-2-maintenance'  => { exist: false               },
       'origin/2-3-maintenance'  => { exist: false               },
       'origin/2-5-maintenance'  => { exist: false               },
