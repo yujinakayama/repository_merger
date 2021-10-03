@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'branch_local_commit_map'
-require_relative 'commit'
 
 class RepositoryMerger
   class CommitHistoryMerger

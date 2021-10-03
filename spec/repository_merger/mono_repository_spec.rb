@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'repository_merger/mono_repository'
-require 'fileutils'
 
 class RepositoryMerger
   RSpec.describe MonoRepository do

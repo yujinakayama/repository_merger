@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require 'digest'
-require 'find'
-
 RSpec.describe 'original RSpec repositories', if: Dir.exist?(PathHelper.dest_path.join('original_repos')) do
   include FileHelper
   include GitHelper

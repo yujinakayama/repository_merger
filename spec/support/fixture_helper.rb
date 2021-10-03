@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'repository_merger/repository'
+
 module FixtureHelper
   module_function
 

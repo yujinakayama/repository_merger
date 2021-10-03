@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require 'repository_merger/github_issue_reference'
-require 'digest'
-require 'find'
 
 RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join('monorepo')) do
   include FileHelper

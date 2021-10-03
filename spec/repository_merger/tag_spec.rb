@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'repository_merger/repository'
+require 'repository_merger/tag'
 
 class RepositoryMerger
   RSpec.describe Tag do

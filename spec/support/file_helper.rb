@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'digest'
+require 'find'
+
 module FileHelper
   module_function
 

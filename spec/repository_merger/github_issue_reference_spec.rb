@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'repository_merger/github_issue_reference'
-require 'json'
 
 class RepositoryMerger
   RSpec.describe GitHubIssueReference do
