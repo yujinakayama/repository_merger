@@ -189,7 +189,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.3.0'         => true,
       'v3.4.0'         => true,
       'v3.5.0.beta1'   => true,
-      'v3.5.0.beta2'   => false,
+      'v3.5.0.beta2'   => true,
       'v3.5.0.beta3'   => true,
       'v3.5.0.beta4'   => true,
       'v3.5.0'         => true,
@@ -221,7 +221,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v2.0.0.beta.6'  => true,
       'v2.0.0.beta.7'  => true,
       'v2.0.0.beta.8'  => true,
-      'v2.0.0.beta.9'  => false,
+      'v2.0.0.beta.9'  => true,
       'v2.0.0.beta.10' => true,
       'v2.0.0.beta.11' => true,
       'v2.0.0.beta.12' => true,
@@ -325,7 +325,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.4.3'         => true,
       'v3.4.4'         => true,
       'v3.5.0.beta1'   => true,
-      'v3.5.0.beta2'   => false,
+      'v3.5.0.beta2'   => true,
       'v3.5.0.beta3'   => true,
       'v3.5.0.beta4'   => true,
       'v3.5.0'         => true,
@@ -444,7 +444,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.3.1'         => true,
       'v3.4.0'         => true,
       'v3.5.0.beta1'   => true,
-      'v3.5.0.beta2'   => false,
+      'v3.5.0.beta2'   => true,
       'v3.5.0.beta3'   => true,
       'v3.5.0.beta4'   => true,
       'v3.5.0'         => true,
@@ -582,7 +582,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.4.0'         => true,
       'v3.4.1'         => true,
       'v3.5.0.beta1'   => true,
-      'v3.5.0.beta2'   => false,
+      'v3.5.0.beta2'   => true,
       'v3.5.0.beta3'   => true,
       'v3.5.0.beta4'   => true,
       'v3.5.0'         => true,
@@ -618,7 +618,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.4.0'       => true,
       'v3.4.1'       => true,
       'v3.5.0.beta1' => true,
-      'v3.5.0.beta2' => false,
+      'v3.5.0.beta2' => true,
       'v3.5.0.beta3' => true,
       'v3.5.0.beta4' => true,
       'v3.5.0'       => true,
@@ -654,6 +654,33 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
           expect { git(['rev-parse', new_tag_name, '--']) }.not_to raise_error
         end
       end
+    end
+  end
+
+  describe 'v2.0.0.beta.9-core tag which is not reachable from any target branches' do
+    around do |example|
+      Dir.chdir('monorepo') do
+        example.run
+      end
+    end
+
+    def tags_reachable_from(reference)
+      git(['log', '--format=%D', reference])
+        .split("\n")
+        .select { |line| line.start_with?('tag: ') }
+        .map { |line| line.delete_prefix('tag: ') }
+    end
+
+    let(:sibling_tag_names) do
+      %w[rspec core expectations mocks].map { |suffix| "v2.0.0.beta.9-#{suffix}" }
+    end
+
+    it 'can reach to sibling tags' do
+      expect(tags_reachable_from('v2.0.0.beta.9-core')).to include(
+        'v2.0.0.beta.9-rspec',
+        'v2.0.0.beta.9-expectations',
+        'v2.0.0.beta.9-mocks'
+      )
     end
   end
 end

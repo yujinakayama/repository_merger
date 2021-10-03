@@ -427,7 +427,7 @@ RSpec.describe RepositoryMerger do
     end
   end
 
-  describe '#import_tags' do
+  describe '#import_all_tags' do
     let(:commit_message_transformer) do
       proc do |original_commit|
         "[#{original_commit.repo.name}] #{original_commit.message}"
@@ -519,7 +519,7 @@ RSpec.describe RepositoryMerger do
     end
 
     it 'imports tags by transforming names or skips importing some tags if it should' do
-      repo_merger.import_tags(tag_name_transformer: tag_name_transformer)
+      repo_merger.import_all_tags(tag_name_transformer: tag_name_transformer)
 
       expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
         * 2020-01-01 00:07:10 +0000 [repo_b] main 4 (HEAD -> main, tag: repo_b-1.1)
@@ -564,7 +564,7 @@ RSpec.describe RepositoryMerger do
       end
 
       it 'properly imports them with message and metadata' do
-        repo_merger.import_tags(tag_name_transformer: tag_name_transformer)
+        repo_merger.import_all_tags(tag_name_transformer: tag_name_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:01:00 +0000 [repo_a] main 2 (HEAD -> main, tag: repo_a-1.0)
