@@ -2,12 +2,12 @@
 
 class RepositoryMerger
   class TagImporter
-    attr_reader :original_tags, :configuration, :tag_name_transformer
+    attr_reader :original_tags, :configuration, :tag_name_conversion
 
-    def initialize(tags, configuration:, tag_name_transformer:)
+    def initialize(tags, configuration:, tag_name_conversion:)
       @original_tags = tags
       @configuration = configuration
-      @tag_name_transformer = tag_name_transformer
+      @tag_name_conversion = tag_name_conversion
     end
 
     def run
@@ -22,7 +22,7 @@ class RepositoryMerger
     def process_tag(original_tag)
       logger.verbose "  [#{original_tag.repo.name}] #{original_tag.name}"
 
-      new_tag_name = tag_name_transformer.call(original_tag)
+      new_tag_name = tag_name_conversion.call(original_tag)
 
       if new_tag_name
         if monorepo.tag(new_tag_name)

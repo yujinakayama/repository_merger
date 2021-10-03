@@ -27,7 +27,7 @@ class RepositoryMerger
       CommitHistoryMerger.new(
         configuration: configuration,
         references: original_branches,
-        commit_message_transformer: commit_message_transformer
+        commit_message_conversion: commit_message_conversion
       )
     end
 
@@ -56,7 +56,7 @@ class RepositoryMerger
       StringIO.new
     end
 
-    let(:commit_message_transformer) do
+    let(:commit_message_conversion) do
       proc do |original_commit|
         "[#{original_commit.repo.name}] #{original_commit.message}"
       end

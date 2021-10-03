@@ -22,13 +22,13 @@ def main
 
     repo_merger.merge_commit_history_of(
       tags,
-      commit_message_transformer: method(:convert_commit_message),
+      commit_message_conversion: method(:convert_commit_message),
       progress_title: "[#{current_import_phase_number}/#{total_import_phase_count}: #{tag_name}]"
     )
 
     # We need to import the tags here before importing target branches
     # so that the tags will reference right commits.
-    repo_merger.import_tags(tags, tag_name_transformer: method(:convert_tag_name))
+    repo_merger.import_tags(tags, tag_name_conversion: method(:convert_tag_name))
 
     current_import_phase_number += 1
   end
@@ -36,14 +36,14 @@ def main
   target_branch_names.each do |branch_name|
     repo_merger.merge_commit_history_of_branches_named(
       branch_name,
-      commit_message_transformer: method(:convert_commit_message),
+      commit_message_conversion: method(:convert_commit_message),
       progress_title: "[#{current_import_phase_number}/#{total_import_phase_count}: #{branch_name}]"
     )
 
     current_import_phase_number += 1
   end
 
-  repo_merger.import_all_tags(tag_name_transformer: method(:convert_tag_name))
+  repo_merger.import_all_tags(tag_name_conversion: method(:convert_tag_name))
 
   Dir.chdir(configuration.monorepo_path) do
     # Clear index and working tree since they're cluttered after the merge

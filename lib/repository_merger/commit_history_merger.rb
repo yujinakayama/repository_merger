@@ -5,13 +5,13 @@ require_relative 'commit'
 
 class RepositoryMerger
   class CommitHistoryMerger
-    attr_reader :configuration, :original_references, :commit_message_transformer, :progress_title
+    attr_reader :configuration, :original_references, :commit_message_conversion, :progress_title
     attr_accessor :wants_to_abort
 
-    def initialize(configuration:, references:, commit_message_transformer: nil, progress_title: nil)
+    def initialize(configuration:, references:, commit_message_conversion: nil, progress_title: nil)
       @configuration = configuration
       @original_references = references
-      @commit_message_transformer = commit_message_transformer
+      @commit_message_conversion = commit_message_conversion
       @progress_title = progress_title
     end
 
@@ -97,8 +97,8 @@ class RepositoryMerger
     end
 
     def commit_message_from(original_commit)
-      if commit_message_transformer
-        commit_message_transformer.call(original_commit)
+      if commit_message_conversion
+        commit_message_conversion.call(original_commit)
       else
         original_commit.message
       end
