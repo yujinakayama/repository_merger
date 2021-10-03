@@ -26,7 +26,7 @@ class RepositoryMerger
     def create_branch_merger
       BranchMerger.new(
         configuration: create_configuration,
-        target_branch_name: 'main',
+        branch_name: 'main',
         commit_message_transformer: commit_message_transformer
       )
     end

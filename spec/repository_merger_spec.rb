@@ -47,7 +47,7 @@ RSpec.describe RepositoryMerger do
     StringIO.new
   end
 
-  describe '#merge_branches' do
+  describe '#' do
     let(:commit_message_transformer) do
       proc do |original_commit|
         "[#{original_commit.repo.name}] #{original_commit.message}"
@@ -114,7 +114,7 @@ RSpec.describe RepositoryMerger do
       end
 
       it 'imports mainline commits by mixing in date order and non-mainline commits without mixing' do
-        repo_merger.merge_branches(['main'], commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('main', commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:07:10 +0000 [repo_b] main 4 (HEAD -> main)
@@ -190,7 +190,8 @@ RSpec.describe RepositoryMerger do
       end
 
       it 'imports commits by creating multiple commits for an original commit in each branch if needed' do
-        repo_merger.merge_branches(['main', 'maintenance'], commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('main', commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:05:00 +0000 [repo_a] main 4 (HEAD -> main)
@@ -256,7 +257,9 @@ RSpec.describe RepositoryMerger do
       end
 
       it 'imports commits by creating multiple commits for an original commit in each branch if needed' do
-        repo_merger.merge_branches(['main', 'maintenance', 'bugfix'], commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('main', commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('bugfix', commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:03:00 +0000 [repo_a] bugfix 1 (bugfix)
@@ -304,7 +307,8 @@ RSpec.describe RepositoryMerger do
       end
 
       it 'ignores the repo' do
-        repo_merger.merge_branches(['main', 'maintenance'], commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('main', commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:03:00 +0000 [repo_a] maintenance 1 (maintenance)
@@ -384,7 +388,8 @@ RSpec.describe RepositoryMerger do
       end
 
       it 'reassembles the commit graph so that all the branches have no contamination commits' do
-        repo_merger.merge_branches(['main', 'maintenance'], commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('main', commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('maintenance', commit_message_transformer: commit_message_transformer)
 
         expect(commit_graph_of(monorepo_path)).to eq(<<~'END')
           * 2020-01-01 00:04:10 +0000 [repo_b] maintenance 2 (maintenance)
@@ -510,7 +515,7 @@ RSpec.describe RepositoryMerger do
     end
 
     before do
-      repo_merger.merge_branches(['main'], commit_message_transformer: commit_message_transformer)
+      repo_merger.merge_branches('main', commit_message_transformer: commit_message_transformer)
     end
 
     it 'imports tags by transforming names or skips importing some tags if it should' do
@@ -555,7 +560,7 @@ RSpec.describe RepositoryMerger do
       end
 
       before do
-        repo_merger.merge_branches(['main'], commit_message_transformer: commit_message_transformer)
+        repo_merger.merge_branches('main', commit_message_transformer: commit_message_transformer)
       end
 
       it 'properly imports them with message and metadata' do

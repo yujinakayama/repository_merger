@@ -5,18 +5,18 @@ require_relative 'commit'
 
 class RepositoryMerger
   class BranchMerger
-    attr_reader :configuration, :target_branch_name, :commit_message_transformer, :progress_title
+    attr_reader :configuration, :original_branch_name, :commit_message_transformer, :progress_title
     attr_accessor :wants_to_abort
 
-    def initialize(configuration:, target_branch_name:, commit_message_transformer: nil, progress_title: nil)
+    def initialize(configuration:, branch_name:, commit_message_transformer: nil, progress_title: nil)
       @configuration = configuration
-      @target_branch_name = target_branch_name
+      @original_branch_name = branch_name
       @commit_message_transformer = commit_message_transformer
       @progress_title = progress_title
     end
 
     def run
-      logger.verbose("Importing Commits for #{monorepo_branch_name}", title: true)
+      logger.verbose("Importing Commits for #{monorepo_original_branch_name}", title: true)
       logger.start_tracking_progress_for('commits', total: unprocessed_original_commit_queue.size, title: progress_title)
 
       while (original_commit = unprocessed_original_commit_queue.next)
@@ -25,7 +25,7 @@ class RepositoryMerger
       end
     ensure
       if monorepo_branch_head_commit
-        monorepo.create_or_update_branch(monorepo_branch_name, commit_id: monorepo_branch_head_commit.id)
+        monorepo.create_or_update_branch(monorepo_original_branch_name, commit_id: monorepo_branch_head_commit.id)
       end
 
       repo_commit_map.merge!(branch_local_commit_map)
@@ -106,14 +106,14 @@ class RepositoryMerger
       end
     end
 
-    def monorepo_branch_name
-      @monorepo_branch_name ||= original_branches.first.local_name
+    def monorepo_original_branch_name
+      @monorepo_original_branch_name ||= original_branches.first.local_name
     end
 
     def unprocessed_original_commit_queue
       @unprocessed_original_commit_queue ||= OriginalCommitQueue.new(
         repos: original_repos,
-        target_branch_name: target_branch_name
+        original_branch_name: original_branch_name
       )
     end
 
@@ -124,7 +124,7 @@ class RepositoryMerger
     end
 
     def original_branches
-      original_repos.map { |repo| repo.branch(target_branch_name) }.compact
+      original_repos.map { |repo| repo.branch(original_branch_name) }.compact
     end
 
     def original_repos
@@ -148,11 +148,11 @@ class RepositoryMerger
     end
 
     class OriginalCommitQueue
-      attr_reader :repos, :target_branch_name
+      attr_reader :repos, :original_branch_name
 
-      def initialize(repos:, target_branch_name:)
+      def initialize(repos:, original_branch_name:)
         @repos = repos
-        @target_branch_name = target_branch_name
+        @original_branch_name = original_branch_name
       end
 
       def next
@@ -169,7 +169,7 @@ class RepositoryMerger
       end
 
       def target_branches
-        repos.map { |repo| repo.branch(target_branch_name) }.compact
+        repos.map { |repo| repo.branch(original_branch_name) }.compact
       end
     end
   end

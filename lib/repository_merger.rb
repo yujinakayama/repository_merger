@@ -11,17 +11,15 @@ class RepositoryMerger
     @configuration = configuration
   end
 
-  def merge_branches(branch_names, commit_message_transformer: nil)
-    branch_names.each_with_index do |target_branch_name, index|
-      branch_merger = BranchMerger.new(
-        configuration: configuration,
-        target_branch_name: target_branch_name,
-        commit_message_transformer: commit_message_transformer,
-        progress_title: "[#{index + 1}/#{branch_names.size} branches: #{target_branch_name}]"
-      )
+  def merge_branches(branch_name, commit_message_transformer: nil, progress_title: nil)
+    branch_merger = BranchMerger.new(
+      configuration: configuration,
+      branch_name: branch_name,
+      commit_message_transformer: commit_message_transformer,
+      progress_title: progress_title
+    )
 
-      branch_merger.run
-    end
+    branch_merger.run
   ensure
     configuration.repo_commit_map.save if configuration.repo_commit_map.path
   end
