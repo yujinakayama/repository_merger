@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'repository_merger/github_issue_reference'
 require 'digest'
 require 'find'
@@ -35,7 +37,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
     '3-7-maintenance'  => { graph: true,  contents: true  },
     '3-8-maintenance'  => { graph: true,  contents: true  },
     '3-9-maintenance'  => { graph: true,  contents: true  },
-    '3-10-maintenance' => { graph: true,  contents: true  },
+    '3-10-maintenance' => { graph: true,  contents: true  }
   }.each do |branch_name, expected_results|
     describe "#{branch_name} branch" do
       def commit_fingerprints_in(repo_path, revision_id)
@@ -197,7 +199,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.7.0'         => true,
       'v3.8.0'         => true,
       'v3.9.0'         => true,
-      'v3.10.0'        => true,
+      'v3.10.0'        => true
     },
     'rspec-core' => {
       'v0.0.0'         => true,
@@ -344,7 +346,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.9.2'         => true,
       'v3.9.3'         => true,
       'v3.10.0'        => true,
-      'v3.10.1'        => true,
+      'v3.10.1'        => true
     },
     'rspec-expectations' => {
       'v0.0.0'         => true,
@@ -463,7 +465,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.9.3'         => true,
       'v3.9.4'         => true,
       'v3.10.0'        => true,
-      'v3.10.1'        => true,
+      'v3.10.1'        => true
     },
     'rspec-mocks' => {
       'v0.0.0'         => true,
@@ -595,7 +597,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.9.1'         => true,
       'v3.10.0'        => true,
       'v3.10.1'        => true,
-      'v3.10.2'        => true,
+      'v3.10.2'        => true
     },
     'rspec-support' => {
       'v3.0.0.beta1' => true,
@@ -635,7 +637,7 @@ RSpec.describe 'merged RSpec monorepo', if: Dir.exist?(PathHelper.dest_path.join
       'v3.9.4'       => true,
       'v3.10.0'      => true,
       'v3.10.1'      => true,
-      'v3.10.2'      => true,
+      'v3.10.2'      => true
     }
   }.each do |repo_name, tags|
     tags.each do |original_tag_name, imported|

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.configure do |config|
   config.before(:suite) do
     ENV['GIT_AUTHOR_NAME'] = 'Alice'

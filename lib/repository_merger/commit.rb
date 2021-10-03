@@ -6,7 +6,7 @@ class RepositoryMerger
       id == other.id
     end
 
-    alias eql? ==
+    alias_method :eql?, :==
 
     def hash
       id.hash

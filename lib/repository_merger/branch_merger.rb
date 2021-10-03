@@ -113,7 +113,7 @@ class RepositoryMerger
     def unprocessed_original_commit_queue
       @unprocessed_original_commit_queue ||= OriginalCommitQueue.new(
         repos: original_repos,
-        target_branch_name: target_branch_name,
+        target_branch_name: target_branch_name
       )
     end
 

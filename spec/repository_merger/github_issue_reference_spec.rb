@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'repository_merger/github_issue_reference'
 require 'json'
 
@@ -26,7 +28,7 @@ class RepositoryMerger
         )
       end
 
-      let(:original_message) { <<~END}
+      let(:original_message) { <<~END }
         Merge pull request #372 from danielgrippi/patch-1
 
         Fixes rspec/rspec-mocks#123 and #456.
@@ -47,7 +49,7 @@ class RepositoryMerger
       end
 
       context 'with a repo-local reference in auto-generated message for merged pull request' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           Merge pull request #372 from danielgrippi/patch-1
         END
 
@@ -59,7 +61,7 @@ class RepositoryMerger
       end
 
       context 'with only #123' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           #123
         END
 
@@ -71,7 +73,7 @@ class RepositoryMerger
       end
 
       context 'with #123 in the body' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           Subject
 
           #123
@@ -85,7 +87,7 @@ class RepositoryMerger
       end
 
       context 'with [#123]' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           [#123]
         END
 
@@ -97,7 +99,7 @@ class RepositoryMerger
       end
 
       context 'with (#123)' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           [#123]
         END
 
@@ -109,7 +111,7 @@ class RepositoryMerger
       end
 
       context 'with foo-#123' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           foo-#123
         END
 
@@ -121,7 +123,7 @@ class RepositoryMerger
       end
 
       context 'with #123-foo' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           #123-foo
         END
 
@@ -133,7 +135,7 @@ class RepositoryMerger
       end
 
       context 'with _#123' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           _#123
         END
 
@@ -143,7 +145,7 @@ class RepositoryMerger
       end
 
       context 'with #123_' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           #123_
         END
 
@@ -153,7 +155,7 @@ class RepositoryMerger
       end
 
       context 'with foo#123' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           foo#123
         END
 
@@ -163,7 +165,7 @@ class RepositoryMerger
       end
 
       context 'with rspec/rspec-core#123' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           Fix error with using custom matchers inside other custom matcher rspec/rspec-core#592
         END
 
@@ -175,7 +177,7 @@ class RepositoryMerger
       end
 
       context 'with multiple references' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           #123 rspec/rspec-core#456 #789
         END
 
@@ -189,7 +191,7 @@ class RepositoryMerger
       end
 
       context 'with GH-123' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           GH-123
         END
 
@@ -201,7 +203,7 @@ class RepositoryMerger
       end
 
       context 'with gh-123' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           gh-123
         END
 
@@ -213,7 +215,7 @@ class RepositoryMerger
       end
 
       context 'with gh-123-1' do
-        let(:message) { <<~END}
+        let(:message) { <<~END }
           gh-123-1
         END
 

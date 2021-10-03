@@ -76,7 +76,7 @@ def fetch_original_repos_if_needed
 
   Dir.mkdir(original_repos_dir) unless Dir.exist?(original_repos_dir)
 
-  repo_paths = Dir.chdir(original_repos_dir) do |current_directory|
+  Dir.chdir(original_repos_dir) do |current_directory|
     repo_urls.map do |repo_url|
       repo_name = File.basename(repo_url, '.git')
 
@@ -87,8 +87,6 @@ def fetch_original_repos_if_needed
       File.join(current_directory, repo_name)
     end
   end
-
-  repo_paths
 end
 
 def create_monorepo_if_needed

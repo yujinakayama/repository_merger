@@ -6,5 +6,23 @@ AllCops:
     - 'tmp/**/*'
   NewCops: enable
 
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
 Layout/HashAlignment:
   EnforcedHashRocketStyle: table
+
+Naming/HeredocDelimiterNaming:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/EmptyElse:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false

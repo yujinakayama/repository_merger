@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'repository_merger/mono_repository'
 require 'fileutils'
 
@@ -361,7 +363,7 @@ class RepositoryMerger
         end
 
         def files(pattern)
-          file_paths = Dir.glob('**/*').select { |path| File.file?(path) }
+          file_paths = Dir.glob(pattern).select { |path| File.file?(path) }
           file_paths.map { |path| [path, File.read(path)] }.to_h
         end
 
