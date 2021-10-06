@@ -3,7 +3,7 @@
 class RepositoryMerger
   module CommitMap
     def original_commit_key(commit)
-      "#{commit.repo.name}-#{commit.id}"
+      "#{commit.id}@#{commit.repo.name}"
     end
   end
 end
