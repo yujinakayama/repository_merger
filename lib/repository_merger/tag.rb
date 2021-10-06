@@ -19,7 +19,7 @@ class RepositoryMerger
             rugged_tag.target_id
           end
 
-        repo.lookup(commit_id)
+        repo.commit_for(commit_id)
       end
     end
 

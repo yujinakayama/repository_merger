@@ -42,7 +42,7 @@ class RepositoryMerger
 
     def monorepo_commits_for(original_commit)
       commit_ids = monorepo_commit_ids_for(original_commit)
-      commit_ids.map { |id| monorepo.lookup(id) }
+      commit_ids.map { |id| monorepo.commit_for(id) }
     end
 
     def monorepo_commit_ids_for(original_commit)

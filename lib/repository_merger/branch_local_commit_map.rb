@@ -24,7 +24,7 @@ class RepositoryMerger
 
     def monorepo_commit_for(original_commit)
       monorepo_commit_id = monorepo_commit_id_for(original_commit)
-      monorepo.lookup(monorepo_commit_id)
+      monorepo.commit_for(monorepo_commit_id)
     end
 
     def monorepo_commit_id_for(original_commit)

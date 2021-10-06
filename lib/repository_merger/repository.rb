@@ -56,9 +56,10 @@ class RepositoryMerger
       end
     end
 
-    def lookup(commit_id)
-      rugged_commit = rugged_repo.lookup(commit_id)
-      Commit.new(rugged_commit, self)
+    def commit_for(commit_id)
+      object = rugged_repo.lookup(commit_id)
+      return nil unless object.is_a?(Rugged::Commit)
+      Commit.new(object, self)
     end
   end
 end

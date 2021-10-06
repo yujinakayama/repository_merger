@@ -95,7 +95,7 @@ class RepositoryMerger
 
       @current_checked_out_commit_id = new_commit_id
 
-      lookup(new_commit_id)
+      commit_for(new_commit_id)
     end
 
     def empty_commit_for_debug?
