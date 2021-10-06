@@ -6,6 +6,7 @@ AllCops:
     - 'tmp/**/*'
     - 'vendor/**/*'
   NewCops: enable
+  SuggestExtensions: false
 
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
