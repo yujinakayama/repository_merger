@@ -82,15 +82,30 @@ def tag_names_unreachable_from_target_branches
 end
 
 def convert_commit_message(original_commit)
-  scope = original_commit.repo.name.sub(/\Arspec-/, '')
-
   message = RepositoryMerger::GitHubIssueReference.convert_repo_local_references_to_absolute_ones_in(
     original_commit.message,
     username: 'rspec',
     repo_name: original_commit.repo.name
   )
 
-  "[#{scope}] #{message}"
+  lines = message.split(/\r?\n/)
+
+  scope = original_commit.repo.name.sub(/\Arspec-/, '')
+  lines.first.prepend("[#{scope}] ")
+
+  if lines.size == 1
+    lines << ''
+  else
+    lines.concat([
+      '',
+      '---'
+    ])
+  end
+
+  original_commit_url = "https://github.com/rspec/#{original_commit.repo.name}/commit/#{original_commit.id}"
+  lines << "This commit was imported from #{original_commit_url}."
+
+  lines.join("\n")
 end
 
 def convert_tag_name(original_tag)
