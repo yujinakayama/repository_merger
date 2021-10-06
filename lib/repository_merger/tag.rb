@@ -11,16 +11,14 @@ class RepositoryMerger
     end
 
     def target_commit
-      @target_commit ||= begin
-        commit_id =
-          if rugged_tag.annotated?
-            rugged_tag.annotation.target_id
-          else
-            rugged_tag.target_id
-          end
+      commit_id =
+        if rugged_tag.annotated?
+          rugged_tag.annotation.target_id
+        else
+          rugged_tag.target_id
+        end
 
-        repo.commit_for(commit_id)
-      end
+      repo.commit_for(commit_id)
     end
 
     def annotation

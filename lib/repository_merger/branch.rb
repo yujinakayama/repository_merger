@@ -37,7 +37,7 @@ class RepositoryMerger
     end
 
     def target_commit
-      @target_commit ||= repo.commit_for(rugged_branch.target_id)
+      repo.commit_for(rugged_branch.target_id)
     end
 
     def revision_id
