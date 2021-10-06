@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require 'repository_merger'
+require 'repository_merger/commit_history_merger'
+require 'repository_merger/configuration'
 require 'stringio'
 
 class RepositoryMerger

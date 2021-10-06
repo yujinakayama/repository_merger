@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'commit'
 require_relative 'reference'
 
 require 'rugged'
