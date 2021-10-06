@@ -25,7 +25,7 @@ class RepositoryMerger
       new_tag_name = tag_name_conversion.call(original_tag)
 
       if new_tag_name
-        if monorepo.tag(new_tag_name)
+        if monorepo.tag_for(new_tag_name)
           logger.verbose "    Already imported as #{new_tag_name.inspect}. Skipping."
         else
           new_tag = import_tag_into_monorepo(original_tag, new_tag_name: new_tag_name)

@@ -32,7 +32,7 @@ class RepositoryMerger
       File.basename(path)
     end
 
-    def branch(name)
+    def branch_for(name)
       rugged_branch = rugged_repo.branches[name]
       return nil unless rugged_branch
       Branch.new(rugged_branch, self)
@@ -44,7 +44,7 @@ class RepositoryMerger
       end
     end
 
-    def tag(name)
+    def tag_for(name)
       rugged_tag = rugged_repo.tags[name]
       return nil unless rugged_tag
       Tag.new(rugged_tag, self)

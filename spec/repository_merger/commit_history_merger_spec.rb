@@ -22,7 +22,7 @@ class RepositoryMerger
     def create_commit_history_merger
       configuration = create_configuration
 
-      original_branches = configuration.original_repos.map { |repo| repo.branch('main') }.compact
+      original_branches = configuration.original_repos.map { |repo| repo.branch_for('main') }.compact
 
       CommitHistoryMerger.new(
         original_branches,

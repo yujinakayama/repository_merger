@@ -18,7 +18,7 @@ def main
   current_import_phase_number = 1
 
   tag_names_unreachable_from_target_branches.each do |tag_name|
-    tags = configuration.original_repos.map { |repo| repo.tag(tag_name) }.compact
+    tags = configuration.original_repos.map { |repo| repo.tag_for(tag_name) }.compact
 
     repo_merger.merge_commit_history_of(
       tags,

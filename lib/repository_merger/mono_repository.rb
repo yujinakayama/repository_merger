@@ -33,11 +33,11 @@ class RepositoryMerger
         rugged_repo.tags.create(new_tag_name, new_commit_id)
       end
 
-      tag(new_tag_name)
+      tag_for(new_tag_name)
     end
 
     def create_or_update_branch(branch_name, commit_id:)
-      if branch(branch_name)
+      if branch_for(branch_name)
         # `rugged_repo.branches.create` with master branch fails with error:
         # cannot force update branch 'master' as it is the current HEAD of the repository. (Rugged::ReferenceError)
         rugged_repo.references.update("refs/heads/#{branch_name}", commit_id)

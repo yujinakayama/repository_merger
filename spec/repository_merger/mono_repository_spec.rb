@@ -17,7 +17,7 @@ class RepositoryMerger
 
     describe '#import_commit' do
       let(:original_commits) do
-        original_repo.branch('origin/main').topologically_ordered_commits_from_root
+        original_repo.branch_for('origin/main').topologically_ordered_commits_from_root
       end
 
       it 'creates a new commit with contents of the original commit under the given subdirectory on the branch' do
@@ -117,7 +117,7 @@ class RepositoryMerger
         end
 
         let(:original_commits) do
-          original_repo.branch('main').topologically_ordered_commits_from_root
+          original_repo.branch_for('main').topologically_ordered_commits_from_root
         end
 
         let!(:new_root_commit) do
@@ -168,7 +168,7 @@ class RepositoryMerger
         end
 
         let(:original_commits) do
-          original_repo.branch('main').topologically_ordered_commits_from_root
+          original_repo.branch_for('main').topologically_ordered_commits_from_root
         end
 
         let!(:new_root_commit) do
@@ -215,7 +215,7 @@ class RepositoryMerger
         end
 
         let(:original_commits) do
-          original_repo.branch('main').topologically_ordered_commits_from_root
+          original_repo.branch_for('main').topologically_ordered_commits_from_root
         end
 
         let!(:new_root_commit) do
@@ -279,7 +279,7 @@ class RepositoryMerger
         end
 
         let(:original_commit) do
-          original_repo.branch('main').topologically_ordered_commits_from_root.first
+          original_repo.branch_for('main').topologically_ordered_commits_from_root.first
         end
 
         before do
@@ -368,31 +368,31 @@ class RepositoryMerger
 
         before do
           new_main_root_commit = monorepo.import_commit(
-            repo_a.branch('main').topologically_ordered_commits_from_root[0],
+            repo_a.branch_for('main').topologically_ordered_commits_from_root[0],
             new_parents: [],
             subdirectory: 'repo_a'
           )
 
           new_main_second_commit = monorepo.import_commit(
-            repo_b.branch('main').topologically_ordered_commits_from_root[0],
+            repo_b.branch_for('main').topologically_ordered_commits_from_root[0],
             new_parents: [new_main_root_commit],
             subdirectory: 'repo_b'
           )
 
           new_feature_commit = monorepo.import_commit(
-            repo_a.branch('feature').topologically_ordered_commits_from_root[1],
+            repo_a.branch_for('feature').topologically_ordered_commits_from_root[1],
             new_parents: [new_main_second_commit],
             subdirectory: 'repo_a'
           )
 
           new_main_third_commit = monorepo.import_commit(
-            repo_b.branch('main').topologically_ordered_commits_from_root[1],
+            repo_b.branch_for('main').topologically_ordered_commits_from_root[1],
             new_parents: [new_main_second_commit],
             subdirectory: 'repo_b'
           )
 
           new_main_last_commit = monorepo.import_commit(
-            repo_a.branch('main').topologically_ordered_commits_from_root[2],
+            repo_a.branch_for('main').topologically_ordered_commits_from_root[2],
             new_parents: [new_main_third_commit, new_feature_commit],
             subdirectory: 'repo_a'
           )
@@ -430,11 +430,11 @@ class RepositoryMerger
     describe '#import_tag' do
       context 'with a lightweight annotated tag' do
         let(:original_tag) do
-          original_repo.tag('v2.0.0.beta.1')
+          original_repo.tag_for('v2.0.0.beta.1')
         end
 
         let(:original_commit) do
-          original_repo.branch('origin/main').topologically_ordered_commits_from_root.find do |commit|
+          original_repo.branch_for('origin/main').topologically_ordered_commits_from_root.find do |commit|
             commit.id == 'dd11a4714dc51d78a8ba5fec42adaffc6c92ea39'
           end
         end
@@ -478,11 +478,11 @@ class RepositoryMerger
 
       context 'with an annotated tag' do
         let(:original_tag) do
-          original_repo.tag('v3.0.0')
+          original_repo.tag_for('v3.0.0')
         end
 
         let(:original_commit) do
-          original_repo.branch('origin/main').topologically_ordered_commits_from_root.find do |commit|
+          original_repo.branch_for('origin/main').topologically_ordered_commits_from_root.find do |commit|
             commit.id == '91f428f609b37422c08306517e09d2466ab8e516'
           end
         end

@@ -12,7 +12,7 @@ class RepositoryMerger
   end
 
   def merge_commit_history_of_branches_named(original_branch_name, commit_message_conversion: nil, progress_title: nil)
-    original_branches = configuration.original_repos.map { |repo| repo.branch(original_branch_name) }.compact
+    original_branches = configuration.original_repos.map { |repo| repo.branch_for(original_branch_name) }.compact
 
     monorepo_head_commit = merge_commit_history_of(
       original_branches,
