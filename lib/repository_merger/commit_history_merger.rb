@@ -44,7 +44,7 @@ class RepositoryMerger
       end
 
       branch_local_commit_map.register(
-        monorepo_commit_id: monorepo_commit.id,
+        monorepo_commit: monorepo_commit,
         original_commit: original_commit
       )
 

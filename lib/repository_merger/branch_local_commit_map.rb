@@ -16,10 +16,10 @@ class RepositoryMerger
       @map ||= {}
     end
 
-    def register(monorepo_commit_id:, original_commit:)
+    def register(monorepo_commit:, original_commit:)
       key = original_commit_key(original_commit)
       raise if map.key?(key)
-      map[key] = monorepo_commit_id
+      map[key] = monorepo_commit.id
     end
 
     def monorepo_commit_for(original_commit)
