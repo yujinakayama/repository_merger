@@ -2,8 +2,7 @@
 
 source 'https://rubygems.org'
 
-gem 'ruby-progressbar', '~> 1.11'
-gem 'rugged', '~> 1.2'
+gemspec
 
 group :development do
   gem 'pry-byebug', '~> 3.9'

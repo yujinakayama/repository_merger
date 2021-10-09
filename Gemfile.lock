@@ -1,3 +1,10 @@
+PATH
+  remote: .
+  specs:
+    repository_merger (0.1.0)
+      ruby-progressbar (~> 1.11)
+      rugged (~> 1.2)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -53,10 +60,9 @@ PLATFORMS
 DEPENDENCIES
   pry-byebug (~> 3.9)
   rake (~> 13.0)
+  repository_merger!
   rspec (~> 3.10)
   rubocop (~> 1.22)
-  ruby-progressbar (~> 1.11)
-  rugged (~> 1.2)
 
 BUNDLED WITH
    2.2.28
