@@ -1,3 +1,10 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
 /dest
+/doc/
+/pkg/
+/spec/reports/
 /spec/examples.txt
 /tmp
